@@ -82,7 +82,17 @@
             if (savedTheme) {
                 document.documentElement.setAttribute('data-theme', savedTheme);
                 document.body.setAttribute('data-theme', savedTheme);
-                document.documentElement.className = document.body.className = `theme-${savedTheme}`;
+                const applyThemeClass = (element) => {
+                    Array.from(element.classList).forEach((className) => {
+                        if (className.startsWith('theme-')) {
+                            element.classList.remove(className);
+                        }
+                    });
+                    element.classList.add(`theme-${savedTheme}`);
+                };
+
+                applyThemeClass(document.documentElement);
+                applyThemeClass(document.body);
             }
         } catch (error) {}
     </script>

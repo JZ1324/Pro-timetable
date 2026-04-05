@@ -7,10 +7,89 @@ import AcademicPlanner from './AcademicPlanner';
 import SmartStudySearch from './SmartStudySearch';
 import Login from './Login';
 import ThemeInitializer from './ThemeInitializer';
+import { applyThemeToDocument } from '../services/themeService';
 import { useAuth } from './AuthProvider';
 import { useSyncStatus } from '../hooks/useSyncStatus';
 import { debugLog } from '../utils/debug';
 import '../styles/components/SmartStudySearchContainer.css';
+
+const LOCKED_OVERFLOW_VALUES = new Set(['hidden', 'clip']);
+const STALE_SCROLL_LOCK_CLASSES = ['modal-open', 'focus-mode-active', 'smart-search-active'];
+const BLOCKING_OVERLAY_SELECTORS = [
+  '.colors-popup-overlay',
+  '.notification-popup-modal',
+  '.confirm-dialog-modal',
+  '.template-name-modal',
+  '.logout-confirm-modal',
+  '.import-timetable-modal',
+  '.import-tutorial-overlay',
+  '.tutorial-selection-overlay',
+  '.tutorial-overlay',
+  '.practice-reminder-overlay',
+  '.modal-overlay',
+  '.user-profile-modal',
+  '.user-info-modal',
+  '.change-password-modal',
+  '.help-page-fullscreen',
+  '.focus-mode-overlay',
+  '.task-form-overlay',
+  '.advanced-search-overlay',
+  '.templates-overlay',
+  '.analytics-overlay'
+];
+
+const isElementVisible = (element) => {
+  if (!element) return false;
+
+  const style = window.getComputedStyle(element);
+  if (
+    style.display === 'none' ||
+    style.visibility === 'hidden' ||
+    parseFloat(style.opacity || '1') === 0
+  ) {
+    return false;
+  }
+
+  const rect = element.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0;
+};
+
+const hasVisibleBlockingOverlay = () => {
+  return BLOCKING_OVERLAY_SELECTORS.some((selector) =>
+    Array.from(document.querySelectorAll(selector)).some(isElementVisible)
+  );
+};
+
+const hasActiveScrollLock = () => {
+  const body = document.body;
+  const root = document.documentElement;
+
+  const classesPresent = STALE_SCROLL_LOCK_CLASSES.some((className) => body.classList.contains(className));
+  const bodyComputed = window.getComputedStyle(body);
+  const rootComputed = window.getComputedStyle(root);
+  const bodyLocked = LOCKED_OVERFLOW_VALUES.has(body.style.overflow) || LOCKED_OVERFLOW_VALUES.has(body.style.overflowY);
+  const rootLocked = LOCKED_OVERFLOW_VALUES.has(root.style.overflow) || LOCKED_OVERFLOW_VALUES.has(root.style.overflowY);
+  const bodyComputedLocked = LOCKED_OVERFLOW_VALUES.has(bodyComputed.overflow) || LOCKED_OVERFLOW_VALUES.has(bodyComputed.overflowY);
+  const rootComputedLocked = LOCKED_OVERFLOW_VALUES.has(rootComputed.overflow) || LOCKED_OVERFLOW_VALUES.has(rootComputed.overflowY);
+
+  return classesPresent || bodyLocked || rootLocked || bodyComputedLocked || rootComputedLocked;
+};
+
+const clearStaleScrollLock = () => {
+  const body = document.body;
+  const root = document.documentElement;
+
+  body.style.overflow = '';
+  body.style.overflowY = '';
+  body.style.height = '';
+  body.style.minHeight = '';
+  body.style.position = '';
+  root.style.overflow = '';
+  root.style.overflowY = '';
+  root.style.height = '';
+  root.style.minHeight = '';
+  STALE_SCROLL_LOCK_CLASSES.forEach((className) => body.classList.remove(className));
+};
 
 const AppContent = () => {
   // Get saved theme or default to light
@@ -49,11 +128,8 @@ const AppContent = () => {
       console.error('Error saving to localStorage:', error);
     }
     
-    // Apply theme classes directly
-    document.documentElement.className = `theme-${theme}`;
-    document.documentElement.setAttribute('data-theme', theme);
-    document.body.className = `theme-${theme}`;
-    document.body.setAttribute('data-theme', theme);
+    // Apply theme classes directly without clobbering modal/scroll-lock classes
+    applyThemeToDocument(theme);
     
     debugLog(`Applied theme classes. document.body.className: ${document.body.className}`);
   };
@@ -83,10 +159,7 @@ const AppContent = () => {
     // Extra safety mechanism to ensure theme is properly applied
     const forceApplyTheme = () => {
       debugLog("Force applying theme to ensure it's active:", currentTheme);
-      document.documentElement.className = `theme-${currentTheme}`;
-      document.documentElement.setAttribute('data-theme', currentTheme);
-      document.body.className = `theme-${currentTheme}`;
-      document.body.setAttribute('data-theme', currentTheme);
+      applyThemeToDocument(currentTheme);
       
       // Force re-render by touching the state
       setCurrentTheme(prev => prev);
@@ -104,11 +177,8 @@ const AppContent = () => {
     const initialTheme = getSavedTheme();
     debugLog("%c INITIAL THEME: ", "background: #6e3cbf; color: white; padding: 4px; border-radius: 4px", initialTheme);
     
-    // Apply theme classes directly
-    document.documentElement.className = `theme-${initialTheme}`;
-    document.documentElement.setAttribute('data-theme', initialTheme);
-    document.body.className = `theme-${initialTheme}`;
-    document.body.setAttribute('data-theme', initialTheme);
+    // Apply theme classes directly without replacing unrelated body/html classes
+    applyThemeToDocument(initialTheme);
     
     // Force update the current theme state
     setCurrentTheme(initialTheme);
@@ -138,6 +208,51 @@ const AppContent = () => {
     debugLog('Login successful, user:', user.uid);
     // The Auth Provider will handle the authentication state now
   };
+
+  useEffect(() => {
+    if (!isAuthenticated || showAcademicPlanner || showSmartStudySearch) {
+      return undefined;
+    }
+
+    const recoverScrollableShell = () => {
+      if (!hasActiveScrollLock()) {
+        return;
+      }
+
+      if (hasVisibleBlockingOverlay()) {
+        return;
+      }
+
+      clearStaleScrollLock();
+    };
+
+    const scheduleRecovery = () => {
+      window.setTimeout(recoverScrollableShell, 0);
+    };
+
+    const rafId = window.requestAnimationFrame(recoverScrollableShell);
+    const shortTimerId = window.setTimeout(recoverScrollableShell, 150);
+    const longTimerId = window.setTimeout(recoverScrollableShell, 600);
+    const intervalId = window.setInterval(recoverScrollableShell, 1500);
+
+    window.addEventListener('focus', recoverScrollableShell);
+    document.addEventListener('visibilitychange', recoverScrollableShell);
+    document.addEventListener('click', scheduleRecovery, true);
+    document.addEventListener('keydown', scheduleRecovery, true);
+    document.addEventListener('touchend', scheduleRecovery, true);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      window.clearTimeout(shortTimerId);
+      window.clearTimeout(longTimerId);
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', recoverScrollableShell);
+      document.removeEventListener('visibilitychange', recoverScrollableShell);
+      document.removeEventListener('click', scheduleRecovery, true);
+      document.removeEventListener('keydown', scheduleRecovery, true);
+      document.removeEventListener('touchend', scheduleRecovery, true);
+    };
+  }, [isAuthenticated, showAcademicPlanner, showSmartStudySearch]);
 
   // Conditionally render Login or main app
   return (

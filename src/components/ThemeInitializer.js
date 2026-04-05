@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { getAccentHue, setAccentHue } from '../services/themeService';
+import { applyThemeToDocument, getAccentHue, setAccentHue } from '../services/themeService';
 import { debugLog } from '../utils/debug';
 
 const ThemeInitializer = ({ theme }) => {
@@ -20,13 +20,8 @@ const ThemeInitializer = ({ theme }) => {
       // Add transition class just before applying theme
       root.classList.add('theme-transition');
       requestAnimationFrame(() => {
-        // Apply theme class to both html and body elements
-        document.documentElement.className = `theme-${theme} theme-transition`;
-        document.body.className = `theme-${theme}`; // Also add theme class to body
-        
-        // Also set data-theme attribute for CSS variable selection
-        document.documentElement.setAttribute('data-theme', theme);
-        document.body.setAttribute('data-theme', theme);
+        // Apply theme classes without wiping unrelated global state such as modal locks
+        applyThemeToDocument(theme, { rootExtraClasses: ['theme-transition'] });
         
         // Update document title to reflect theme (for debugging purposes)
         document.title = `Timetable App - ${theme.charAt(0).toUpperCase() + theme.slice(1)} Theme`;

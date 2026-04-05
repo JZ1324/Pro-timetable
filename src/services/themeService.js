@@ -1,3 +1,5 @@
+import { debugLog } from '../utils/debug';
+
 // Theme definitions - Using absolute paths for webpack dev server
 const themes = {
     light: './assets/themes/light.css',
@@ -10,6 +12,31 @@ const themes = {
 
 let currentTheme = 'light';
 
+const removeThemeClasses = (element) => {
+    if (!element) return;
+
+    Array.from(element.classList).forEach((className) => {
+        if (className.startsWith('theme-')) {
+            element.classList.remove(className);
+        }
+    });
+};
+
+const applyThemeToElement = (element, theme, extraClasses = []) => {
+    if (!element) return;
+
+    removeThemeClasses(element);
+    element.classList.add(`theme-${theme}`);
+    extraClasses.filter(Boolean).forEach((className) => element.classList.add(className));
+    element.setAttribute('data-theme', theme);
+};
+
+const applyThemeToDocument = (theme, options = {}) => {
+    const { rootExtraClasses = [], bodyExtraClasses = [] } = options;
+    applyThemeToElement(document.documentElement, theme, rootExtraClasses);
+    applyThemeToElement(document.body, theme, bodyExtraClasses);
+};
+
 const loadTheme = (theme) => {
     if (!themes[theme]) {
         console.warn(`Theme ${theme} is not available.`);
@@ -19,7 +46,7 @@ const loadTheme = (theme) => {
     // Update current theme
     currentTheme = theme;
     
-    console.log(`%c themeService: `, 'background: #6e3cbf; color: white; padding: 4px; border-radius: 4px', `Loading theme: ${theme} from path: ${themes[theme]}`);
+    debugLog(`%c themeService: `, 'background: #6e3cbf; color: white; padding: 4px; border-radius: 4px', `Loading theme: ${theme} from path: ${themes[theme]}`);
     
     // Dynamically update or create the theme-stylesheet link
     let link = document.getElementById('theme-stylesheet');
@@ -28,32 +55,27 @@ const loadTheme = (theme) => {
         link.rel = 'stylesheet';
         link.id = 'theme-stylesheet';
         document.head.appendChild(link);
-        console.log('Created new link element for theme');
+        debugLog('Created new link element for theme');
     }
     
     // Force browser to reload the CSS by adding a timestamp
     const timestamp = new Date().getTime();
     link.href = `${themes[theme]}?t=${timestamp}`;
-    console.log(`Set link href to: ${link.href}`);
+    debugLog(`Set link href to: ${link.href}`);
     
-    // Apply theme class to both html and body elements with high specificity
-    document.documentElement.className = `theme-${theme}`;
-    document.body.className = `theme-${theme}`; // Add class to body as well
-    
-    // Also set data-theme attribute for CSS variable selection
-    document.documentElement.setAttribute('data-theme', theme);
-    document.body.setAttribute('data-theme', theme);
+    // Apply theme without clobbering unrelated scroll-lock or modal classes
+    applyThemeToDocument(theme);
     
     // Check if the body has the right class after a short delay
     setTimeout(() => {
-        console.log('Body class after timeout:', document.body.className);
-        console.log('Document class after timeout:', document.documentElement.className);
+        debugLog('Body class after timeout:', document.body.className);
+        debugLog('Document class after timeout:', document.documentElement.className);
     }, 100);
     
     // Store in localStorage
     try {
         localStorage.setItem('preferred-theme', theme);
-        console.log(`Theme ${theme} applied and saved to localStorage`);
+        debugLog(`Theme ${theme} applied and saved to localStorage`);
     } catch (error) {
         console.warn('Failed to save theme preference:', error);
     }
@@ -144,4 +166,4 @@ const initTheme = () => {
 };
 
 // Export new functions
-export { loadTheme, getCurrentTheme, setTheme, initTheme, setAccentHue, getAccentHue, applyCustomTheme };
+export { loadTheme, getCurrentTheme, setTheme, initTheme, setAccentHue, getAccentHue, applyCustomTheme, applyThemeToDocument };
