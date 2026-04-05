@@ -25,7 +25,9 @@ const DayView = ({
     getTimerDisplay = () => '00:00',
     getEstimatedTimeCountdown = () => 'Unknown',
     generateAISuggestions = [],
-    handleSuggestionAction = () => {}
+    handleSuggestionAction = () => {},
+    todayFocusQueue = [],
+    assignmentWorkloadWarnings = []
 }) => {
     // Configuration for how many days ahead to show tasks
     const UPCOMING_DAYS_RANGE = 3; // Show tasks up to 3 days in advance
@@ -172,6 +174,48 @@ const DayView = ({
     return (
         <div className="day-view">
             <div className="view-content">
+                {todayFocusQueue.length > 0 && (
+                    <div className="focus-queue-strip">
+                        <div className="focus-queue-header">
+                            <h3 className="section-header">Today Focus Queue</h3>
+                            <span className="task-count">{todayFocusQueue.length}</span>
+                        </div>
+                        <div className="focus-queue-items">
+                            {todayFocusQueue.map((task, index) => (
+                                <button
+                                    key={task.id}
+                                    className="focus-queue-item"
+                                    onClick={() => handleSuggestionAction({ id: 'schedule-today', taskId: task.id })}
+                                    title={`Start ${task.title}`}
+                                >
+                                    <span className="focus-queue-rank">#{index + 1}</span>
+                                    <span className="focus-queue-title">{task.title}</span>
+                                    <span className="focus-queue-meta">{task.remainingMinutes} min</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {assignmentWorkloadWarnings.length > 0 && (
+                    <div className="workload-warnings">
+                        <h3 className="section-header">Assignment Workload Warnings</h3>
+                        <div className="workload-warning-list">
+                            {assignmentWorkloadWarnings.map((warning) => (
+                                <div key={warning.id} className={`workload-warning-card ${warning.level}`}>
+                                    <div>
+                                        <h4>{warning.title}</h4>
+                                        <p>
+                                            {warning.openSubtasks} open subtasks{warning.sameDayCluster > 1 ? `, ${warning.sameDayCluster} due on the same day` : ''}.
+                                        </p>
+                                    </div>
+                                    <span>{warning.recommendation}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Assignments Section */}
                 {assignments.length > 0 && (
                     <div className="assignments-section">

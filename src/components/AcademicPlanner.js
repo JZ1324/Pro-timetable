@@ -942,6 +942,78 @@ const AcademicPlanner = () => {
         }
     };
 
+    const todayFocusQueue = useMemo(() => {
+        const now = new Date();
+        const pending = tasks.filter((task) => task.status !== 'completed');
+
+        const scored = pending.map((task) => {
+            const dueDate = new Date(task.dueDate);
+            const dueMs = dueDate.getTime() - now.getTime();
+            const daysUntilDue = dueMs / (1000 * 3600 * 24);
+            const progressPercent = normalizeProgressPercent(task.progress);
+            const estimatedMinutes = parseTimeToMinutes(task.estimatedTime || '1h') || 60;
+            const remainingMinutes = Math.max(0, estimatedMinutes - Math.round((task.timerData?.totalTimeSpent || 0) / 60));
+
+            let score = 0;
+            score += task.priority === 'High' ? 40 : task.priority === 'Medium' ? 24 : 12;
+            score += daysUntilDue < 0 ? 50 : daysUntilDue <= 1 ? 35 : daysUntilDue <= 3 ? 18 : 8;
+            score += Math.round((100 - progressPercent) * 0.4);
+            score += remainingMinutes > 120 ? 6 : 0;
+
+            return {
+                ...task,
+                focusScore: score,
+                remainingMinutes,
+                progressPercent,
+            };
+        });
+
+        return scored
+            .sort((a, b) => b.focusScore - a.focusScore)
+            .slice(0, 5);
+    }, [tasks]);
+
+    const assignmentWorkloadWarnings = useMemo(() => {
+        const now = new Date();
+        const assignments = tasks.filter((task) => task.isAssignment && task.status !== 'completed');
+        const warningMap = new Map();
+
+        assignments.forEach((assignment) => {
+            const subtasks = Array.isArray(assignment.subtasks) ? assignment.subtasks : [];
+            const openSubtasks = subtasks.filter((subtask) => subtask.status !== 'completed');
+            const dueBuckets = openSubtasks.reduce((acc, subtask) => {
+                if (!subtask.dueDate) return acc;
+                const due = new Date(subtask.dueDate);
+                const key = due.toDateString();
+                acc[key] = (acc[key] || 0) + 1;
+                return acc;
+            }, {});
+
+            const maxBucket = Object.values(dueBuckets).reduce((max, count) => Math.max(max, count), 0);
+            const dueSoon = (new Date(assignment.dueDate).getTime() - now.getTime()) / (1000 * 3600 * 24) <= 3;
+
+            if (openSubtasks.length >= 5 || maxBucket >= 3 || dueSoon) {
+                const level = openSubtasks.length >= 8 || maxBucket >= 4 ? 'high' : 'medium';
+                warningMap.set(assignment.id, {
+                    id: assignment.id,
+                    title: assignment.title,
+                    level,
+                    openSubtasks: openSubtasks.length,
+                    sameDayCluster: maxBucket,
+                    dueDate: assignment.dueDate,
+                    recommendation: level === 'high'
+                        ? 'Split this assignment into smaller sessions today and tomorrow.'
+                        : 'Schedule one focused block today to reduce deadline pressure.',
+                });
+            }
+        });
+
+        return Array.from(warningMap.values()).sort((a, b) => {
+            if (a.level !== b.level) return a.level === 'high' ? -1 : 1;
+            return new Date(a.dueDate) - new Date(b.dueDate);
+        });
+    }, [tasks]);
+
     // AI Suggestions based on task analysis
     const generateAISuggestions = useMemo(() => {
         const suggestions = [];
@@ -974,6 +1046,19 @@ const AcademicPlanner = () => {
             });
         }
 
+        if (todayFocusQueue.length > 0) {
+            const nextTask = todayFocusQueue[0];
+            suggestions.push({
+                id: 'schedule-today',
+                title: 'Auto-Schedule Your Next Block',
+                description: `Next best task: ${nextTask.title} (${nextTask.remainingMinutes} min left).`,
+                type: 'planning',
+                action: 'Start next focus task',
+                icon: 'ri-calendar-schedule-line',
+                taskId: nextTask.id,
+            });
+        }
+
         // Suggestion for high priority tasks
         if (highPriorityTasks.length > 0) {
             suggestions.push({
@@ -998,6 +1083,17 @@ const AcademicPlanner = () => {
                 action: 'Start study session',
                 icon: 'ri-focus-3-line',
                 taskId: task.id
+            });
+        }
+
+        if (assignmentWorkloadWarnings.length > 0) {
+            suggestions.push({
+                id: 'workload-spike',
+                title: 'Assignment Workload Spike Detected',
+                description: `${assignmentWorkloadWarnings.length} assignment(s) need earlier subtask distribution.`,
+                type: 'urgent',
+                action: 'Review workload warnings',
+                icon: 'ri-alert-line',
             });
         }
 
@@ -1046,8 +1142,8 @@ const AcademicPlanner = () => {
             });
         }
 
-        return suggestions.slice(0, 3); // Return top 3 suggestions
-    }, [tasks]);
+        return suggestions.slice(0, 4); // Return top 4 suggestions
+    }, [tasks, todayFocusQueue, assignmentWorkloadWarnings]);
 
     const handleSuggestionAction = (suggestion) => {
         switch (suggestion.id) {
@@ -1065,9 +1161,14 @@ const AcademicPlanner = () => {
                 break;
             case 'continue-work':
             case 'prepare-deadline':
+            case 'schedule-today':
                 if (suggestion.taskId) {
                     startStudyTimer(suggestion.taskId);
                 }
+                break;
+            case 'workload-spike':
+                setCurrentView('day');
+                showToast('Review assignment warnings and split heavy subtasks.', 'warning');
                 break;
             case 'take-break':
                 showToast('Great idea! Take a well-deserved break 😊', 'success');
@@ -1676,6 +1777,8 @@ const AcademicPlanner = () => {
                             getEstimatedTimeCountdown={getEstimatedTimeCountdown}
                             generateAISuggestions={generateAISuggestions}
                             handleSuggestionAction={handleSuggestionAction}
+                            todayFocusQueue={todayFocusQueue}
+                            assignmentWorkloadWarnings={assignmentWorkloadWarnings}
                         />
                     )}
                     

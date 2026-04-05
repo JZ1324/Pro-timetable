@@ -81,7 +81,111 @@
 .task-group, .assignment-group { animation: fadeInUp 0.3s ease-out; }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
 
+/* Focus Queue and Workload Warnings */
+.focus-queue-strip {
+    background: var(--color-bg-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-1);
+    border: 1px solid var(--color-border-subtle);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.focus-queue-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.focus-queue-items {
+    display: flex;
+    gap: 0.6rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+}
+
+.focus-queue-item {
+    border: 1px solid var(--color-border-subtle);
+    background: var(--color-bg-elevated);
+    border-radius: 12px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 0.75rem;
+    min-width: 220px;
+    cursor: pointer;
+    color: var(--color-text-main);
+}
+
+.focus-queue-item:hover {
+    border-color: var(--color-accent);
+    transform: translateY(-1px);
+}
+
+.focus-queue-rank {
+    font-weight: 700;
+    color: var(--color-accent);
+}
+
+.focus-queue-title {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.focus-queue-meta {
+    color: var(--color-text-subtle);
+    font-size: 0.85rem;
+}
+
+.workload-warnings {
+    background: var(--color-bg-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-1);
+    border: 1px solid var(--color-border-subtle);
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.workload-warning-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 0.75rem;
+}
+
+.workload-warning-card {
+    border-left: 4px solid #f59e0b;
+    border-radius: 10px;
+    background: color-mix(in oklab, #fff7e6 85%, transparent);
+    padding: 0.8rem 0.9rem;
+}
+
+.workload-warning-card.high {
+    border-left-color: #dc2626;
+    background: color-mix(in oklab, #fee2e2 90%, transparent);
+}
+
+.workload-warning-card h4 {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.workload-warning-card p {
+    margin: 0.35rem 0 0.5rem 0;
+    color: var(--color-text-subtle);
+    font-size: 0.9rem;
+}
+
+.workload-warning-card span {
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .day-tasks { grid-template-columns: 1fr; }
+    .focus-queue-item { min-width: 180px; }
 }
