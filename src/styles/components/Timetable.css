@@ -153,9 +153,10 @@
 /* Header Layout */
 .header-main {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     width: 100%;
+    gap: 12px;
 }
 
 .header-main h2 {
@@ -1465,14 +1466,15 @@
 /* Header Layout */
 .header-main {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     width: 100%;
+    gap: 12px;
 }
 
 .header-main h2 {
     margin: 0;
-    flex: 1;
+    flex: 0;
 }
 
 .header-admin {
