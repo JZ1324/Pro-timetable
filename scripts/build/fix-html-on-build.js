@@ -11,9 +11,7 @@ const buildDir = path.join(__dirname, '..', '..', 'build');
 const indexHtmlPath = path.join(buildDir, 'index.html');
 const helperScripts = [
     '/path-fix.js',
-    '/vercel-path-fix.js',
-    '/EnglishTruncationFixDirectGlobal.js',
-    '/EnglishTruncationFixStandalone.js'
+    '/vercel-path-fix.js'
 ];
 
 function injectMissingHelperScripts(htmlContent) {
@@ -54,7 +52,11 @@ async function fixHtmlOnBuild() {
         // Remove duplicate early script tags before re-injecting missing helpers.
         htmlContent = htmlContent
             .replace(/<script src="\/path-fix\.js"><\/script>\s*(?=.*<script src="\/path-fix\.js"><\/script>)/g, '')
-            .replace(/<script src="\/vercel-path-fix\.js"><\/script>\s*(?=.*<script src="\/vercel-path-fix\.js"><\/script>)/g, '');
+            .replace(/<script src="\/vercel-path-fix\.js"><\/script>\s*(?=.*<script src="\/vercel-path-fix\.js"><\/script>)/g, '')
+            .replace(/<script src="\/EnglishTruncationFixDirectGlobal\.js"><\/script>\s*/g, '')
+            .replace(/<script src="\/EnglishTruncationFixStandalone\.js"><\/script>\s*/g, '')
+            .replace(/<script src="\/compatibility-polyfill\.js"><\/script>\s*/g, '')
+            .replace(/<script src="\/webpack-config-override\.js"><\/script>\s*/g, '');
 
         htmlContent = injectMissingHelperScripts(htmlContent);
 
