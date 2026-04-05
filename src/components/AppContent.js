@@ -79,15 +79,18 @@ const clearStaleScrollLock = () => {
   const body = document.body;
   const root = document.documentElement;
 
-  body.style.overflow = '';
-  body.style.overflowY = '';
-  body.style.height = '';
-  body.style.minHeight = '';
-  body.style.position = '';
-  root.style.overflow = '';
-  root.style.overflowY = '';
-  root.style.height = '';
-  root.style.minHeight = '';
+  // Use an explicit reset instead of an empty string so we override stale
+  // modal/focus CSS that can otherwise keep the main timetable unscrollable.
+  body.style.overflow = 'unset';
+  body.style.overflowY = 'unset';
+  body.style.height = 'unset';
+  body.style.minHeight = 'unset';
+  body.style.position = 'unset';
+  body.style.pointerEvents = 'unset';
+  root.style.overflow = 'unset';
+  root.style.overflowY = 'unset';
+  root.style.height = 'unset';
+  root.style.minHeight = 'unset';
   STALE_SCROLL_LOCK_CLASSES.forEach((className) => body.classList.remove(className));
 };
 
@@ -215,11 +218,17 @@ const AppContent = () => {
     }
 
     const recoverScrollableShell = () => {
-      if (!hasActiveScrollLock()) {
+      if (hasVisibleBlockingOverlay()) {
         return;
       }
 
-      if (hasVisibleBlockingOverlay()) {
+      // Even when the computed lock is subtle, force the shell back to a
+      // scrollable baseline on the main timetable screen.
+      if (!hasActiveScrollLock()) {
+        document.body.style.overflow = 'unset';
+        document.body.style.overflowY = 'unset';
+        document.documentElement.style.overflow = 'unset';
+        document.documentElement.style.overflowY = 'unset';
         return;
       }
 
@@ -234,6 +243,18 @@ const AppContent = () => {
     const shortTimerId = window.setTimeout(recoverScrollableShell, 150);
     const longTimerId = window.setTimeout(recoverScrollableShell, 600);
     const intervalId = window.setInterval(recoverScrollableShell, 1500);
+    const mutationObserver = new MutationObserver(() => {
+      window.setTimeout(recoverScrollableShell, 0);
+    });
+
+    mutationObserver.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class', 'style']
+    });
+    mutationObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'style']
+    });
 
     window.addEventListener('focus', recoverScrollableShell);
     document.addEventListener('visibilitychange', recoverScrollableShell);
@@ -246,6 +267,7 @@ const AppContent = () => {
       window.clearTimeout(shortTimerId);
       window.clearTimeout(longTimerId);
       window.clearInterval(intervalId);
+      mutationObserver.disconnect();
       window.removeEventListener('focus', recoverScrollableShell);
       document.removeEventListener('visibilitychange', recoverScrollableShell);
       document.removeEventListener('click', scheduleRecovery, true);
