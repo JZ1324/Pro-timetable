@@ -9,15 +9,32 @@ const path = require('path');
 // Configuration
 const buildDir = path.join(__dirname, '..', '..', 'build');
 const indexHtmlPath = path.join(buildDir, 'index.html');
-const pathFixScripts = `
-    <!-- Path fix scripts for deployment - must be loaded first -->
-    <script src="/path-fix.js"></script>
-    <script src="/vercel-path-fix.js"></script>
-    <script src="/EnglishTruncationFixDirectGlobal.js"></script>
-    <script src="/EnglishTruncationFixStandalone.js"></script>
-    <script src="/compatibility-polyfill.js"></script>
-    <script src="/webpack-config-override.js"></script>
-`;
+const helperScripts = [
+    '/path-fix.js',
+    '/vercel-path-fix.js',
+    '/EnglishTruncationFixDirectGlobal.js',
+    '/EnglishTruncationFixStandalone.js',
+    '/compatibility-polyfill.js',
+    '/webpack-config-override.js'
+];
+
+function injectMissingHelperScripts(htmlContent) {
+    const missingScripts = helperScripts.filter((scriptPath) => !htmlContent.includes(`src="${scriptPath}"`));
+
+    if (missingScripts.length === 0) {
+        console.log('Required scripts already present in HTML, skipping...');
+        return htmlContent;
+    }
+
+    const scriptBlock = [
+        '',
+        '    <!-- Path fix scripts for deployment - must be loaded first -->',
+        ...missingScripts.map((scriptPath) => `    <script src="${scriptPath}"></script>`)
+    ].join('\n');
+
+    console.log(`Adding missing helper scripts: ${missingScripts.join(', ')}`);
+    return htmlContent.replace('<head>', `<head>${scriptBlock}`);
+}
 
 // Main function
 async function fixHtmlOnBuild() {
@@ -36,22 +53,16 @@ async function fixHtmlOnBuild() {
         // Read the index.html file
         let htmlContent = fs.readFileSync(indexHtmlPath, 'utf8');
         
-        // Check if scripts already exist
-        if (htmlContent.includes('path-fix.js') && 
-            htmlContent.includes('vercel-path-fix.js') && 
-            htmlContent.includes('EnglishTruncationFixStandalone.js') &&
-            htmlContent.includes('EnglishTruncationFixDirectGlobal.js') &&
-            htmlContent.includes('compatibility-polyfill.js') &&
-            htmlContent.includes('webpack-config-override.js')) {
-            console.log('Required scripts already present in HTML, skipping...');
-        } else {
-            // Insert the path fix scripts after the head tag
-            htmlContent = htmlContent.replace('<head>', '<head>' + pathFixScripts);
-            
-            // Write the modified content back to the file
-            fs.writeFileSync(indexHtmlPath, htmlContent, 'utf8');
-            console.log('Successfully added path fix scripts to index.html');
-        }
+        // Remove duplicate early script tags before re-injecting missing helpers.
+        htmlContent = htmlContent
+            .replace(/<script src="\/path-fix\.js"><\/script>\s*(?=.*<script src="\/path-fix\.js"><\/script>)/g, '')
+            .replace(/<script src="\/vercel-path-fix\.js"><\/script>\s*(?=.*<script src="\/vercel-path-fix\.js"><\/script>)/g, '');
+
+        htmlContent = injectMissingHelperScripts(htmlContent);
+
+        // Write the modified content back to the file
+        fs.writeFileSync(indexHtmlPath, htmlContent, 'utf8');
+        console.log('Successfully updated helper scripts in index.html');
         
         // Check if required scripts exist in the build directory
         const pathFixScriptPath = path.join(buildDir, 'path-fix.js');
