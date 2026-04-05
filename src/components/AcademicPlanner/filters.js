@@ -62,7 +62,11 @@ export const getFilteredTasks = (tasks, filters, searchQuery, searchFilters) => 
     if (filters.hideCompleted) {
         filtered = filtered.filter(task => task.status !== 'completed');
     }
-    if (filters.showUpcoming) {
+    if (filters.showOnlyOverdue) {
+        const now = new Date();
+        filtered = filtered.filter(task => task.status !== 'completed' && new Date(task.dueDate) < now);
+    }
+    if (filters.showOnlyUpcoming) {
         const now = new Date();
         const twoWeeksFromNow = new Date(now);
         twoWeeksFromNow.setDate(now.getDate() + 14);

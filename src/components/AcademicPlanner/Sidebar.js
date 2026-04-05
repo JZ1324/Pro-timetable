@@ -12,6 +12,7 @@ const Sidebar = ({
     const safeFilters = {
         hideCompleted: false,
         showOnlyUpcoming: false,
+        showOnlyOverdue: false,
         subjects: [],
         types: [],
         priorities: [],
@@ -111,6 +112,17 @@ const Sidebar = ({
                                 <span className="switch-slider"></span>
                             </label>
                             <span className="filter-label">Show only upcoming</span>
+                        </div>
+                        <div className="filter-group">
+                            <label className="custom-switch">
+                                <input 
+                                    type="checkbox" 
+                                    checked={safeFilters.showOnlyOverdue}
+                                    onChange={() => handleFilterChange('showOnlyOverdue')}
+                                />
+                                <span className="switch-slider"></span>
+                            </label>
+                            <span className="filter-label">Show only overdue</span>
                         </div>
                     </div>
                 </div>

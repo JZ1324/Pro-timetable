@@ -35,6 +35,14 @@ import { formatDate, formatTimerDisplay, parseTimeToMinutes, formatMinutesToTime
 import { useDebouncedLocalStorage } from '../hooks/useDebouncedLocalStorage';
 import { useStudyTimer } from '../hooks/useStudyTimer';
 
+const normalizeProgressPercent = (progressValue) => {
+    const numeric = Number(progressValue);
+    if (!Number.isFinite(numeric) || numeric <= 0) return 0;
+    // Backward compatibility for old 0..1 data
+    if (numeric <= 1) return Math.round(numeric * 100);
+    return Math.max(0, Math.min(100, Math.round(numeric)));
+};
+
 // Task actions for reducer
 function tasksReducer(state, action) {
   switch(action.type) {
@@ -56,7 +64,6 @@ const AcademicPlanner = () => {
     const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
     const [showTaskTemplates, setShowTaskTemplates] = useState(false);
     const [showSmartStudySearch, setShowSmartStudySearch] = useState(false);
-    const [showAnalyticsDashboard, setShowAnalyticsDashboard] = useState(false);
     const [showSidebar, setShowSidebar] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -106,6 +113,7 @@ const AcademicPlanner = () => {
     const [filters, setFilters] = useState({
         hideCompleted: false,
         showOnlyUpcoming: false, // Changed to match the property name used in Sidebar
+        showOnlyOverdue: false,
         subjects: [], // Empty array means show all subjects
         types: [], // Empty array means show all types
         priorities: [], // Empty array means show all priorities
@@ -205,6 +213,17 @@ const AcademicPlanner = () => {
     const templatesModalRef = useRef(null);
     const advancedSearchModalRef = useRef(null);
     const analyticsDashboardRef = useRef(null);
+    const notificationCooldownsRef = useRef(new Map());
+
+    const shouldSendNotification = (key, cooldownMs) => {
+        const now = Date.now();
+        const lastSent = notificationCooldownsRef.current.get(key) || 0;
+        if (now - lastSent < cooldownMs) {
+            return false;
+        }
+        notificationCooldownsRef.current.set(key, now);
+        return true;
+    };
 
     // Handle click outside to close settings dropdown
     useEffect(() => {
@@ -393,6 +412,10 @@ const AcademicPlanner = () => {
                     overdueItems.slice(0, 3).forEach(item => {
                         const daysOverdue = Math.ceil((now.getTime() - new Date(item.dueDate).getTime()) / (1000 * 3600 * 24));
                         const title = item.itemType === 'subtask' ? `${item.parentTitle} - ${item.title}` : item.title;
+                        const dedupeKey = `overdue-${item.id}`;
+                        if (!shouldSendNotification(dedupeKey, 6 * 60 * 60 * 1000)) {
+                            return;
+                        }
                         
                         new Notification(`Academic Planner - Overdue!`, {
                             body: `${title} was due ${daysOverdue} day${daysOverdue !== 1 ? 's' : ''} ago`,
@@ -407,6 +430,10 @@ const AcademicPlanner = () => {
                         const timeDiff = new Date(item.dueDate).getTime() - now.getTime();
                         const hoursDiff = Math.max(1, Math.round(timeDiff / (1000 * 3600)));
                         const title = item.itemType === 'subtask' ? `${item.parentTitle} - ${item.title}` : item.title;
+                        const dedupeKey = `today-${item.id}`;
+                        if (!shouldSendNotification(dedupeKey, 3 * 60 * 60 * 1000)) {
+                            return;
+                        }
                         
                         new Notification(`Academic Planner - Due Today!`, {
                             body: `${title} is due in ${hoursDiff} hour${hoursDiff !== 1 ? 's' : ''}`,
@@ -483,7 +510,7 @@ const AcademicPlanner = () => {
     };
     
     const handleOpenAnalyticsDashboard = () => {
-        setShowAnalyticsDashboard(true);
+        setShowDataVisualization(true);
         // Use setTimeout to ensure modal state is updated and modal is rendered before scrolling
         setTimeout(() => {
             centerModalWithSmoothScroll(analyticsDashboardRef);
@@ -585,7 +612,11 @@ const AcademicPlanner = () => {
                     ? { 
                         ...task, 
                         status: newStatus,
-                        progress: newStatus === 'completed' ? 1 : newStatus === 'in-progress' ? task.progress || 0.5 : 0,
+                        progress: newStatus === 'completed'
+                            ? 100
+                            : newStatus === 'in-progress'
+                                ? Math.max(normalizeProgressPercent(task.progress), 25)
+                                : 0,
                         completedAt: newStatus === 'completed' ? new Date() : undefined
                     } 
                     : task
@@ -958,10 +989,11 @@ const AcademicPlanner = () => {
         // Study session suggestions
         if (inProgressTasks.length > 0) {
             const task = inProgressTasks[0];
+            const progressPercent = normalizeProgressPercent(task.progress);
             suggestions.push({
                 id: 'continue-work',
                 title: `Continue working on ${task.title}`,
-                description: `You're ${Math.round(task.progress * 100)}% complete. A focused session could help you make significant progress.`,
+                description: `You're ${progressPercent}% complete. A focused session could help you make significant progress.`,
                 type: 'productive',
                 action: 'Start study session',
                 icon: 'ri-focus-3-line',
@@ -1020,7 +1052,11 @@ const AcademicPlanner = () => {
     const handleSuggestionAction = (suggestion) => {
         switch (suggestion.id) {
             case 'overdue':
-                setFilters(prev => ({ ...prev, showOnlyOverdue: true }));
+                setFilters(prev => ({
+                    ...prev,
+                    showOnlyOverdue: true,
+                    showOnlyUpcoming: false,
+                }));
                 showToast('Showing overdue tasks', 'info');
                 break;
             case 'high-priority':
@@ -1082,7 +1118,7 @@ const AcademicPlanner = () => {
     const handleFilterChange = (filterType, value) => {
         console.log('Filter Change Debug:', { filterType, value });
         setFilters(prev => {
-            if (filterType === 'hideCompleted' || filterType === 'showOnlyUpcoming') {
+            if (['hideCompleted', 'showOnlyUpcoming', 'showOnlyOverdue'].includes(filterType)) {
                 return { ...prev, [filterType]: !prev[filterType] };
             } else if (['subjects', 'types', 'priorities'].includes(filterType)) {
                 // Ensure we're working with arrays
@@ -1234,8 +1270,13 @@ const AcademicPlanner = () => {
         if (filters.hideCompleted) {
             filtered = filtered.filter(task => task.status !== 'completed');
         }
+
+        if (filters.showOnlyOverdue) {
+            const now = new Date();
+            filtered = filtered.filter(task => task.status !== 'completed' && new Date(task.dueDate) < now);
+        }
         
-        if (filters.showUpcoming) {
+        if (filters.showOnlyUpcoming) {
             const now = new Date();
             const twoWeeksFromNow = new Date(now);
             twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
@@ -1339,18 +1380,6 @@ const AcademicPlanner = () => {
         return startOfWeek.toISOString().split('T')[0];
     };
 
-    const parseTimeToMinutes = (timeString) => {
-        if (!timeString || timeString === '0 hours') return 0;
-        const hoursMatch = timeString.match(/(\d+(?:\.\d+)?)\s*h/);
-        const minutesMatch = timeString.match(/(\d+)\s*m/);
-        
-        let totalMinutes = 0;
-        if (hoursMatch) totalMinutes += parseFloat(hoursMatch[1]) * 60;
-        if (minutesMatch) totalMinutes += parseInt(minutesMatch[1]);
-        
-        return totalMinutes;
-    };
-
     // Recurring task functionality
     const createRecurringTask = (task, frequency) => {
         const frequencies = {
@@ -1431,7 +1460,8 @@ const AcademicPlanner = () => {
         else if (daysUntilDue < 7) score += 2; // Due within a week
         
         // Progress factor (less progress = higher priority)
-        score += (1 - task.progress) * 2;
+        const progressPercent = normalizeProgressPercent(task.progress);
+        score += ((100 - progressPercent) / 100) * 2;
         
         return score;
     };
@@ -1644,6 +1674,8 @@ const AcademicPlanner = () => {
                             handleProgressUpdate={handleProgressUpdate}
                             getTimerDisplay={getTimerDisplay}
                             getEstimatedTimeCountdown={getEstimatedTimeCountdown}
+                            generateAISuggestions={generateAISuggestions}
+                            handleSuggestionAction={handleSuggestionAction}
                         />
                     )}
                     
