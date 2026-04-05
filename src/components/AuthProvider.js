@@ -5,6 +5,7 @@ import {
   onAuthStateChanged 
 } from '../services/authService';
 import { getUserData, startActivityTracking } from '../services/userService';
+import { debugLog } from '../utils/debug';
 
 // Create Auth Context
 export const AuthContext = createContext(null);
@@ -45,7 +46,7 @@ export const AuthProvider = ({ children }) => {
           }
           
           if (user) {
-            console.log('User authenticated:', user.uid);
+            debugLog('User authenticated:', user.uid);
             setUser(user);
             setIsAuthenticated(true);
             
@@ -53,7 +54,7 @@ export const AuthProvider = ({ children }) => {
             try {
               const cleanup = startActivityTracking(user.uid);
               setActivityCleanup(() => cleanup);
-              console.log('✅ Activity tracking started for user:', user.uid);
+              debugLog('✅ Activity tracking started for user:', user.uid);
             } catch (err) {
               console.error('Error starting activity tracking:', err);
             }
@@ -72,7 +73,7 @@ export const AuthProvider = ({ children }) => {
               });
             }
           } else {
-            console.log('No user authenticated');
+            debugLog('No user authenticated');
             setUser(null);
             setUserData(null);
             setIsAuthenticated(false);

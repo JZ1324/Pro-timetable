@@ -3,6 +3,7 @@ import { useAuth } from '../components/AuthProvider';
 import FirestoreTimetableService from '../services/firestoreTimetableService';
 import { TimetableManager } from '../services/timetableManager';
 import timetableService from '../services/timetableService';
+import { debugLog } from '../utils/debug';
 
 export const useSyncStatus = () => {
     const { user } = useAuth();
@@ -14,11 +15,11 @@ export const useSyncStatus = () => {
         const initializeFirestore = async () => {
             if (user) {
                 try {
-                    console.log('🔥 Initializing Firestore sync services...');
+                    debugLog('🔥 Initializing Firestore sync services...');
                     
                     // Use the existing Firebase v8 compat instance from the auth service
                     if (typeof window !== 'undefined' && window.firebase && window.firebase.firestore) {
-                        console.log('🔥 Using Firebase v8 compat SDK for Firestore...');
+                        debugLog('🔥 Using Firebase v8 compat SDK for Firestore...');
                         
                         const db = window.firebase.firestore();
                         const firestoreService = new FirestoreTimetableService(db, user.uid);
@@ -31,7 +32,7 @@ export const useSyncStatus = () => {
                         await manager.migrate();
                         
                         setIsFirestoreReady(true);
-                        console.log('✅ Firestore sync services ready');
+                        debugLog('✅ Firestore sync services ready');
                     } else {
                         console.warn('⚠️ Firebase v8 compat SDK not available, falling back to localStorage');
                         setIsFirestoreReady(false);
@@ -45,7 +46,7 @@ export const useSyncStatus = () => {
                 setIsFirestoreReady(false);
                 setFirestoreService(null);
                 setTimetableManager(null);
-                console.log('👤 User not authenticated, using localStorage only');
+                debugLog('👤 User not authenticated, using localStorage only');
             }
         };
 

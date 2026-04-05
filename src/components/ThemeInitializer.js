@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { getAccentHue, setAccentHue } from '../services/themeService';
+import { debugLog } from '../utils/debug';
 
 const ThemeInitializer = ({ theme }) => {
   useEffect(() => {
@@ -9,7 +10,7 @@ const ThemeInitializer = ({ theme }) => {
     // This component's only job is to apply the theme to the document root element
     if (theme) {
       const root = document.documentElement;
-      console.log('%c ThemeInitializer: ', 'background: #6e3cbf; color: white; padding: 4px; border-radius: 4px', `Applying theme: ${theme}`);
+      debugLog('%c ThemeInitializer: ', 'background: #6e3cbf; color: white; padding: 4px; border-radius: 4px', `Applying theme: ${theme}`);
       
       // Save scroll position and header state before theme change
       const scrollPosition = window.scrollY;
@@ -34,7 +35,7 @@ const ThemeInitializer = ({ theme }) => {
         setTimeout(() => { root.classList.remove('theme-transition'); }, 450);
       });
       
-      console.log('Applied classes:', {
+      debugLog('Applied classes:', {
         'document.documentElement.className': document.documentElement.className,
         'document.body.className': document.body.className,
         'document.documentElement.getAttribute("data-theme")': document.documentElement.getAttribute('data-theme'),

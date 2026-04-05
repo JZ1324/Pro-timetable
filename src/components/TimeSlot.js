@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useRevealOnScroll from '../hooks/useRevealOnScroll';
 import colorService from '../services/colorService';
+import { debugLog } from '../utils/debug';
 
 const TimeSlot = ({ 
     slot, 
@@ -21,7 +22,7 @@ const TimeSlot = ({
     
     // Update edited slot when the original slot changes
     useEffect(() => {
-        console.log('Slot changed, updating editedSlot:', slot);
+        debugLog('Slot changed, updating editedSlot:', slot);
         setEditedSlot({ ...slot });
     }, [slot]);
 

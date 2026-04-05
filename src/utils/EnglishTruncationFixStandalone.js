@@ -4,6 +4,12 @@
  * Standalone version that doesn't use imports/exports to avoid bundling issues
  * This module is directly included in the index.html file
  */
+const DEBUG = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const debugLog = (...args) => {
+  if (DEBUG) {
+    console.log(...args);
+  }
+};
 
 // Add to window global scope to avoid module system issues
 window.EnglishTruncationFix = {
@@ -14,7 +20,7 @@ window.EnglishTruncationFix = {
    * @returns {string} The repaired JSON string
    */
   fixEnglishTruncation: function(jsonContent, approxErrorPosition = 0) {
-    console.log("Attempting specialized English class truncation fix");
+    debugLog("Attempting specialized English class truncation fix");
 
     // Match the specific English truncation patterns
     const truncationPattern = jsonContent.match(/\"subject\"\s*:\s*\"English\"\s*,\s*\"code\"\s*:\s*\"[^\"]*$/);
@@ -23,17 +29,17 @@ window.EnglishTruncationFix = {
       // Try alternative pattern without the problematic parenthesis
       const altPattern = jsonContent.match(/\"subject\"\s*:\s*\"English\"\s*,\s*\"code\"\s*:\s*\"/);
       if (!altPattern) {
-        console.log("English truncation pattern not found, skipping specialized fix");
+        debugLog("English truncation pattern not found, skipping specialized fix");
         return jsonContent;
       }
     }
     
-    console.log("Found English class truncation pattern, applying fix");
+    debugLog("Found English class truncation pattern, applying fix");
 
     // Determine where to cut the JSON to remove the truncated entry
     const truncationPos = jsonContent.lastIndexOf('"subject": "English"');
     if (truncationPos <= 0) {
-      console.log("Could not locate English truncation position");
+      debugLog("Could not locate English truncation position");
       return jsonContent;
     }
 
@@ -43,7 +49,7 @@ window.EnglishTruncationFix = {
     
     // We need to find the immediate containing object for the English class
     if (lastObjectOpen < 0 || lastArrayOpen < 0) {
-      console.log("Could not locate containing structures for truncated English entry");
+      debugLog("Could not locate containing structures for truncated English entry");
       return jsonContent;
     }
     
@@ -70,7 +76,7 @@ window.EnglishTruncationFix = {
           // Extract the day name from the match
           const dayName = lastDay.match(/\"(Day \d+)\"/)[1];
           
-          console.log(`Identified truncation in ${periodMatch[1]} of ${dayName}`);
+          debugLog(`Identified truncation in ${periodMatch[1]} of ${dayName}`);
           
           // Check if we need to close the period object
           let closingStructure = '';
@@ -115,7 +121,7 @@ window.EnglishTruncationFix = {
         }
       }
       
-      console.log(`Cut JSON at position ${cutPoint} and balanced braces`);
+      debugLog(`Cut JSON at position ${cutPoint} and balanced braces`);
       return fixedJson;
     }
     
@@ -130,7 +136,7 @@ window.EnglishTruncationFix = {
    */
   recoverFromEnglishTruncation: function(jsonContent) {
     try {
-      console.log("Attempting complete recovery from English truncation");
+      debugLog("Attempting complete recovery from English truncation");
       
       // 1. Extract days array
       const daysMatch = jsonContent.match(/\"days\"\s*:\s*\[[\s\S]*?\]/);
@@ -163,7 +169,7 @@ window.EnglishTruncationFix = {
         return null;
       }
       
-      console.log(`Found ${dayBlocks.length} complete day blocks for recovery`);
+      debugLog(`Found ${dayBlocks.length} complete day blocks for recovery`);
       
       // 4. Reconstruct the JSON
       let fixedJson = '{\n';
@@ -184,7 +190,7 @@ window.EnglishTruncationFix = {
       // 5. Try to parse the reconstructed JSON
       try {
         const parsedJson = JSON.parse(fixedJson);
-        console.log("Successfully recovered from English truncation!");
+        debugLog("Successfully recovered from English truncation!");
         return parsedJson;
       } catch (err) {
         console.error("Reconstruction parse error:", err);
@@ -201,7 +207,7 @@ window.EnglishTruncationFix = {
           
           try {
             const parsedJson = JSON.parse(balancedJson);
-            console.log("Successfully recovered after balancing braces!");
+            debugLog("Successfully recovered after balancing braces!");
             return parsedJson;
           } catch (finalErr) {
             console.error("All recovery attempts failed:", finalErr);
@@ -219,4 +225,4 @@ window.EnglishTruncationFix = {
 };
 
 // Let the main application know this utility is loaded
-console.log("EnglishTruncationFixStandalone loaded successfully");
+debugLog("EnglishTruncationFixStandalone loaded successfully");

@@ -1,5 +1,6 @@
 // Firestore-enabled timetable service using v8 compat SDK
 // This ensures compatibility with the existing auth service
+import { debugLog } from '../utils/debug';
 
 class FirestoreTimetableService {
     constructor(db, userId) {
@@ -9,7 +10,7 @@ class FirestoreTimetableService {
         
         // Verify Firebase v8 compat SDK is available
         if (typeof window !== 'undefined' && window.firebase && window.firebase.firestore) {
-            console.log('🔥 Using Firebase v8 compat SDK for Firestore');
+            debugLog('🔥 Using Firebase v8 compat SDK for Firestore');
         } else {
             console.warn('⚠️ Firebase v8 compat SDK not found, operations may fail');
         }
@@ -60,7 +61,7 @@ class FirestoreTimetableService {
      */
     async saveTimetable(timetableData) {
         try {
-            console.log('💾 Saving timetable to Firestore...');
+            debugLog('💾 Saving timetable to Firestore...');
             
             const timetableRef = this.getUserTimetableRef();
             const sanitizedTimeSlots = this.sanitizeForFirestore(timetableData.timeSlots || []);
@@ -76,7 +77,7 @@ class FirestoreTimetableService {
             // Update cache
             this.cache.set('timetable', dataToSave);
             
-            console.log('✅ Timetable saved successfully');
+            debugLog('✅ Timetable saved successfully');
             return true;
         } catch (error) {
             console.error('❌ Error saving timetable:', error);
@@ -89,11 +90,11 @@ class FirestoreTimetableService {
      */
     async loadTimetable() {
         try {
-            console.log('📥 Loading timetable from Firestore...');
+            debugLog('📥 Loading timetable from Firestore...');
             
             // Check cache first
             if (this.cache.has('timetable')) {
-                console.log('📋 Returning cached timetable');
+                debugLog('📋 Returning cached timetable');
                 return this.cache.get('timetable');
             }
 
@@ -103,10 +104,10 @@ class FirestoreTimetableService {
             if (docSnap.exists) {
                 const data = docSnap.data();
                 this.cache.set('timetable', data);
-                console.log('✅ Timetable loaded successfully');
+                debugLog('✅ Timetable loaded successfully');
                 return data;
             } else {
-                console.log('📝 No timetable found, returning empty structure');
+                debugLog('📝 No timetable found, returning empty structure');
                 return {
                     timeSlots: [],
                     currentDay: 1,
@@ -124,7 +125,7 @@ class FirestoreTimetableService {
      */
     async saveTemplate(templateName, templateData) {
         try {
-            console.log(`💾 Saving template "${templateName}" to Firestore...`);
+            debugLog(`💾 Saving template "${templateName}" to Firestore...`);
             
             const templateRef = this.getUserTemplatesRef().doc(templateName);
             const dataToSave = {
@@ -136,7 +137,7 @@ class FirestoreTimetableService {
 
             await templateRef.set(dataToSave);
             
-            console.log(`✅ Template "${templateName}" saved successfully`);
+            debugLog(`✅ Template "${templateName}" saved successfully`);
             return true;
         } catch (error) {
             console.error(`❌ Error saving template "${templateName}":`, error);
@@ -149,7 +150,7 @@ class FirestoreTimetableService {
      */
     async loadTemplates() {
         try {
-            console.log('📥 Loading templates from Firestore...');
+            debugLog('📥 Loading templates from Firestore...');
             
             const templatesRef = this.getUserTemplatesRef();
             const querySnapshot = await templatesRef.get();
@@ -160,7 +161,7 @@ class FirestoreTimetableService {
                 templates[doc.id] = data.timeSlots;
             });
 
-            console.log(`✅ Loaded ${Object.keys(templates).length} templates`);
+            debugLog(`✅ Loaded ${Object.keys(templates).length} templates`);
             return templates;
         } catch (error) {
             console.error('❌ Error loading templates:', error);
@@ -173,12 +174,12 @@ class FirestoreTimetableService {
      */
     async deleteTemplate(templateName) {
         try {
-            console.log(`🗑️ Deleting template "${templateName}" from Firestore...`);
+            debugLog(`🗑️ Deleting template "${templateName}" from Firestore...`);
             
             const templateRef = this.getUserTemplatesRef().doc(templateName);
             await templateRef.delete();
             
-            console.log(`✅ Template "${templateName}" deleted successfully`);
+            debugLog(`✅ Template "${templateName}" deleted successfully`);
             return true;
         } catch (error) {
             console.error(`❌ Error deleting template "${templateName}":`, error);
@@ -191,7 +192,7 @@ class FirestoreTimetableService {
      */
     async updateTimeSlots(timeSlots) {
         try {
-            console.log('🔄 Updating time slots in Firestore...');
+            debugLog('🔄 Updating time slots in Firestore...');
             
             const timetableRef = this.getUserTimetableRef();
             const sanitizedTimeSlots = this.sanitizeForFirestore(timeSlots);
@@ -206,7 +207,7 @@ class FirestoreTimetableService {
             cached.lastModified = new Date();
             this.cache.set('timetable', cached);
             
-            console.log('✅ Time slots updated successfully');
+            debugLog('✅ Time slots updated successfully');
             return true;
         } catch (error) {
             console.error('❌ Error updating time slots:', error);
@@ -219,7 +220,7 @@ class FirestoreTimetableService {
      */
     clearCache() {
         this.cache.clear();
-        console.log('🧹 Cache cleared');
+        debugLog('🧹 Cache cleared');
     }
 
     /**
@@ -241,11 +242,11 @@ class FirestoreTimetableService {
      */
     async migrateFromLocalStorage() {
         try {
-            console.log('🔄 Migrating data from localStorage to Firestore...');
+            debugLog('🔄 Migrating data from localStorage to Firestore...');
             
             // Check if user already has Firestore data
             if (await this.hasTimetableData()) {
-                console.log('⏭️ User already has Firestore data, skipping migration');
+                debugLog('⏭️ User already has Firestore data, skipping migration');
                 return false;
             }
 
@@ -261,7 +262,7 @@ class FirestoreTimetableService {
                     const timetableData = JSON.parse(savedTimetable);
                     await this.saveTimetable(timetableData);
                     migrated = true;
-                    console.log('✅ Timetable data migrated');
+                    debugLog('✅ Timetable data migrated');
                 } catch (error) {
                     console.error('❌ Error migrating timetable data:', error);
                 }
@@ -275,14 +276,14 @@ class FirestoreTimetableService {
                         await this.saveTemplate(name, data);
                     }
                     migrated = true;
-                    console.log('✅ Templates migrated');
+                    debugLog('✅ Templates migrated');
                 } catch (error) {
                     console.error('❌ Error migrating templates:', error);
                 }
             }
 
             if (migrated) {
-                console.log('🎉 Migration completed successfully!');
+                debugLog('🎉 Migration completed successfully!');
                 // Optionally clear localStorage after successful migration
                 // localStorage.removeItem('timetable-data');
                 // localStorage.removeItem('timetable-templates');

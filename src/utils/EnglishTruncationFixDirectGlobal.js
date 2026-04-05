@@ -1,4 +1,10 @@
 /* EnglishTruncationFix.js - No Module Version */
+const DEBUG = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const debugLog = (...args) => {
+  if (DEBUG) {
+    console.log(...args);
+  }
+};
 
 // This is a duplicate of all the functionality we need, without any import/export code
 // Functions are added directly to the window global object
@@ -6,7 +12,7 @@
 window.EnglishTruncationFix = window.EnglishTruncationFix || {};
 
 window.EnglishTruncationFix.fixEnglishTruncation = function(jsonContent, approxErrorPosition = 0) {
-  console.log("Non-module English truncation fix being used");
+  debugLog("Non-module English truncation fix being used");
 
   // Match the specific English truncation patterns
   const truncationPattern = jsonContent.match(/\"subject\"\s*:\s*\"English\"\s*,\s*\"code\"\s*:\s*\"[^\"]*$/);
@@ -15,17 +21,17 @@ window.EnglishTruncationFix.fixEnglishTruncation = function(jsonContent, approxE
     // Try alternative pattern without the problematic parenthesis
     const altPattern = jsonContent.match(/\"subject\"\s*:\s*\"English\"\s*,\s*\"code\"\s*:\s*\"/);
     if (!altPattern) {
-      console.log("English truncation pattern not found, skipping specialized fix");
+      debugLog("English truncation pattern not found, skipping specialized fix");
       return jsonContent;
     }
   }
   
-  console.log("Found English class truncation pattern, applying fix");
+  debugLog("Found English class truncation pattern, applying fix");
 
   // Determine where to cut the JSON to remove the truncated entry
   const truncationPos = jsonContent.lastIndexOf('"subject": "English"');
   if (truncationPos <= 0) {
-    console.log("Could not locate English truncation position");
+    debugLog("Could not locate English truncation position");
     return jsonContent;
   }
 
@@ -35,7 +41,7 @@ window.EnglishTruncationFix.fixEnglishTruncation = function(jsonContent, approxE
   
   // We need to find the immediate containing object for the English class
   if (lastObjectOpen < 0 || lastArrayOpen < 0) {
-    console.log("Could not locate containing structures for truncated English entry");
+    debugLog("Could not locate containing structures for truncated English entry");
     return jsonContent;
   }
   
@@ -119,4 +125,4 @@ window.EnglishTruncationFix.recoverFromEnglishTruncation = function(content, err
   }
 };
 
-console.log("Non-module EnglishTruncationFix has been loaded in global scope");
+debugLog("Non-module EnglishTruncationFix has been loaded in global scope");

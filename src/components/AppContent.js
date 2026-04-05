@@ -9,6 +9,7 @@ import Login from './Login';
 import ThemeInitializer from './ThemeInitializer';
 import { useAuth } from './AuthProvider';
 import { useSyncStatus } from '../hooks/useSyncStatus';
+import { debugLog } from '../utils/debug';
 import '../styles/components/SmartStudySearchContainer.css';
 
 const AppContent = () => {
@@ -35,7 +36,7 @@ const AppContent = () => {
   const { isFirestoreReady } = useSyncStatus();
 
   const handleThemeChange = (theme) => {
-    console.log("%c THEME CHANGE: ", "background: #6e3cbf; color: white; padding: 4px; border-radius: 4px", theme);
+    debugLog("%c THEME CHANGE: ", "background: #6e3cbf; color: white; padding: 4px; border-radius: 4px", theme);
     
     // Update state
     setCurrentTheme(theme);
@@ -43,7 +44,7 @@ const AppContent = () => {
     // Save to localStorage
     try {
       localStorage.setItem('preferred-theme', theme);
-      console.log("Saved theme to localStorage:", theme);
+      debugLog("Saved theme to localStorage:", theme);
     } catch (error) {
       console.error('Error saving to localStorage:', error);
     }
@@ -54,7 +55,7 @@ const AppContent = () => {
     document.body.className = `theme-${theme}`;
     document.body.setAttribute('data-theme', theme);
     
-    console.log(`Applied theme classes. document.body.className: ${document.body.className}`);
+    debugLog(`Applied theme classes. document.body.className: ${document.body.className}`);
   };
 
   const toggleSidebar = () => {
@@ -81,7 +82,7 @@ const AppContent = () => {
   useEffect(() => {
     // Extra safety mechanism to ensure theme is properly applied
     const forceApplyTheme = () => {
-      console.log("Force applying theme to ensure it's active:", currentTheme);
+      debugLog("Force applying theme to ensure it's active:", currentTheme);
       document.documentElement.className = `theme-${currentTheme}`;
       document.documentElement.setAttribute('data-theme', currentTheme);
       document.body.className = `theme-${currentTheme}`;
@@ -101,7 +102,7 @@ const AppContent = () => {
   // Set initial theme on mount
   useEffect(() => {
     const initialTheme = getSavedTheme();
-    console.log("%c INITIAL THEME: ", "background: #6e3cbf; color: white; padding: 4px; border-radius: 4px", initialTheme);
+    debugLog("%c INITIAL THEME: ", "background: #6e3cbf; color: white; padding: 4px; border-radius: 4px", initialTheme);
     
     // Apply theme classes directly
     document.documentElement.className = `theme-${initialTheme}`;
@@ -134,7 +135,7 @@ const AppContent = () => {
 
   // Handle successful login
   const handleLoginSuccess = (user) => {
-    console.log('Login successful, user:', user.uid);
+    debugLog('Login successful, user:', user.uid);
     // The Auth Provider will handle the authentication state now
   };
 

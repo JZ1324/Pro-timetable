@@ -23,6 +23,7 @@ import { isAdmin } from '../services/userService';
 import AdminTerminal from './AdminTerminal';
 import AdminDashboard from './AdminDashboard';
 import { isNotificationSupported, requestNotificationPermission, checkUpcomingClasses } from '../services/notificationService';
+import { debugLog } from '../utils/debug';
 import '../styles/components/Timetable.css';
 import '../styles/components/TimeSlot.css';
 import '../styles/components/CurrentDay.css';
@@ -413,7 +414,7 @@ const Timetable = () => {
                 // Restore the day we were on in mobile view if it's recent (within 5 minutes)
                 if (parsed.timestamp && (Date.now() - parsed.timestamp) < 5 * 60 * 1000) {
                     dayToSet = parsed.currentDay || dayToSet;
-                    console.log(`🔄 Restored from mobile: Day ${dayToSet}`);
+                    debugLog(`🔄 Restored from mobile: Day ${dayToSet}`);
                 }
                 // Clean up the mobile state
                 localStorage.removeItem('mobile-state');
@@ -424,7 +425,7 @@ const Timetable = () => {
 
         // Set the current day (either today or restored from mobile)
         setCurrentDay(dayToSet);
-        console.log(`Setting current day to: Day ${dayToSet}`);
+        debugLog(`Setting current day to: Day ${dayToSet}`);
         
         // Save the current day selection
         saveCurrentTimetableDay(dayToSet);
@@ -432,7 +433,7 @@ const Timetable = () => {
         // Set current period based on current time
         const nowPeriod = getCurrentPeriod();
         setCurrentPeriod(nowPeriod);
-        console.log(`Current period is ${nowPeriod}`);
+        debugLog(`Current period is ${nowPeriod}`);
         
         // Check if break periods should be visible
         const showRecess = shouldShowBreakPeriod('Recess');
@@ -445,7 +446,7 @@ const Timetable = () => {
         // Update current period and break visibility every minute
         const updateInterval = setInterval(() => {
             const updatedPeriod = getCurrentPeriod();
-            console.log(`Updating current period to: ${updatedPeriod}`);
+            debugLog(`Updating current period to: ${updatedPeriod}`);
             setCurrentPeriod(updatedPeriod);
             
             // Animate current period change
@@ -499,13 +500,13 @@ const Timetable = () => {
         const initializeNotifications = async () => {
             // Check if notifications are supported
             if (!isNotificationSupported()) {
-                console.log('Browser notifications are not supported');
+                debugLog('Browser notifications are not supported');
                 return;
             }
             
             // Check if notifications are enabled in settings
             if (!notificationSettings.enabled) {
-                console.log('Notifications are disabled in settings');
+                debugLog('Notifications are disabled in settings');
                 return;
             }
             
@@ -517,11 +518,11 @@ const Timetable = () => {
             }));
             
             if (!permissionGranted) {
-                console.log('Notification permission denied');
+                debugLog('Notification permission denied');
                 return;
             }
             
-            console.log(`Notification system initialized with ${notificationSettings.timeMinutes} minute alert time`);
+            debugLog(`Notification system initialized with ${notificationSettings.timeMinutes} minute alert time`);
         };
         
         initializeNotifications();
@@ -551,7 +552,7 @@ const Timetable = () => {
                     
                     if (notificationResult && notificationResult.length > 0) {
                         notificationResult.forEach(result => {
-                            console.log('Notification sent for upcoming class:', result.slot.subject);
+                            debugLog('Notification sent for upcoming class:', result.slot.subject);
                         });
                     }
                 }
@@ -568,7 +569,7 @@ const Timetable = () => {
                 
                 if (notificationResult && notificationResult.length > 0) {
                     notificationResult.forEach(result => {
-                        console.log('Initial notification sent for upcoming class:', result.slot.subject);
+                        debugLog('Initial notification sent for upcoming class:', result.slot.subject);
                     });
                 }
             }
@@ -1401,16 +1402,16 @@ const Timetable = () => {
                     timeSlots: newTimeSlots,
                     currentDay: currentDay
                 });
-                console.log('✅ Timetable saved to Firestore');
+                debugLog('✅ Timetable saved to Firestore');
             } else {
                 // Fallback to localStorage (existing behavior)
-                console.log('💾 Saving to localStorage (Firestore not ready)');
+                debugLog('💾 Saving to localStorage (Firestore not ready)');
                 // The existing timetableService already handles localStorage
             }
         } catch (error) {
             console.error('❌ Error saving timetable:', error);
             // On error, fall back to localStorage
-            console.log('💾 Falling back to localStorage due to error');
+            debugLog('💾 Falling back to localStorage due to error');
         }
     };
 
@@ -1425,7 +1426,7 @@ const Timetable = () => {
                     if (timetableData.currentDay) {
                         setCurrentDay(timetableData.currentDay);
                     }
-                    console.log('✅ Timetable loaded from Firestore');
+                    debugLog('✅ Timetable loaded from Firestore');
                     return true;
                 }
             }

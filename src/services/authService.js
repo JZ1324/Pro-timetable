@@ -5,6 +5,7 @@
 
 // Import Firebase configuration directly
 import firebaseConfigDefault from '../firebase-config';
+import { debugLog } from '../utils/debug';
 
 // Access the Firebase config from window object (set by index.html) or use the imported config
 const getConfigFromWindow = () => {
@@ -40,7 +41,7 @@ export const initializeAuth = async () => {
   try {
     // Use Firebase SDK from HTML script tags (v8 compat)
     if (typeof window !== 'undefined' && window.firebase) {
-      console.log('🔥 Using Firebase SDK from HTML script tags');
+      debugLog('🔥 Using Firebase SDK from HTML script tags');
       app = window.firebase.app();
       auth = window.firebase.auth();
       
@@ -48,7 +49,7 @@ export const initializeAuth = async () => {
       await auth.setPersistence(window.firebase.auth.Auth.Persistence.LOCAL);
       
       initialized = true;
-      console.log('🔥 Firebase Auth initialized successfully');
+      debugLog('🔥 Firebase Auth initialized successfully');
       return auth;
     }
     
@@ -114,32 +115,32 @@ export const createUser = async (email, password) => {
  * Includes validation and Firestore integration
  */
 export const registerUser = async (username, email, password) => {
-  console.log('🔥 Starting registration process for:', username, email);
+  debugLog('🔥 Starting registration process for:', username, email);
   
   if (!initialized) {
-    console.log('🔥 Initializing Firebase Auth...');
+    debugLog('🔥 Initializing Firebase Auth...');
     await initializeAuth();
   }
   
   // Import necessary services
   const { isDisposableEmail, isUsernameAvailable, createUserDocument } = await import('./userService');
   
-  console.log('🔥 Checking disposable email...');
+  debugLog('🔥 Checking disposable email...');
   // Check if email is from a disposable provider
   if (isDisposableEmail(email)) {
     throw new Error('Temporary emails are not allowed.');
   }
   
-  console.log('🔥 Checking username availability...');
+  debugLog('🔥 Checking username availability...');
   // Check if username is available
   if (!(await isUsernameAvailable(username))) {
     throw new Error('Username already taken');
   }
   
-  console.log('🔥 Creating Firebase Auth user...');
-  console.log('🔥 Email:', email);
-  console.log('🔥 Password length:', password ? password.length : 'undefined');
-  console.log('🔥 Auth object:', !!auth);
+  debugLog('🔥 Creating Firebase Auth user...');
+  debugLog('🔥 Email:', email);
+  debugLog('🔥 Password length:', password ? password.length : 'undefined');
+  debugLog('🔥 Auth object:', !!auth);
   
   // Create user with Firebase Authentication
   const { createUserWithEmailAndPassword } = await import('firebase/auth');
@@ -148,8 +149,8 @@ export const registerUser = async (username, email, password) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    console.log('🔥 Firebase Auth user created successfully! UID:', user.uid);
-    console.log('🔥 Now creating Firestore user document...');
+    debugLog('🔥 Firebase Auth user created successfully! UID:', user.uid);
+    debugLog('🔥 Now creating Firestore user document...');
     
     // Store user data in Firestore
     await createUserDocument(user.uid, {
@@ -157,7 +158,7 @@ export const registerUser = async (username, email, password) => {
       email
     });
     
-    console.log('🔥 Registration completed successfully!');
+    debugLog('🔥 Registration completed successfully!');
     return userCredential;
   } catch (error) {
     console.error('🔥 Firebase Auth error:', error);
@@ -296,7 +297,7 @@ export const changePassword = async (currentPassword, newPassword) => {
 export const ensureUserDocumentExists = async (user, additionalData = {}) => {
   if (!user) return;
   
-  console.log('🔥 Ensuring user document exists for:', user.uid);
+  debugLog('🔥 Ensuring user document exists for:', user.uid);
   
   const { getUserData, createUserDocument } = await import('./userService');
   
@@ -305,7 +306,7 @@ export const ensureUserDocumentExists = async (user, additionalData = {}) => {
     const userData = await getUserData(user.uid);
     
     if (!userData) {
-      console.log('🔥 User document not found, creating it...');
+      debugLog('🔥 User document not found, creating it...');
       
       // Extract username from email or use default
       const email = user.email || '';
@@ -318,9 +319,9 @@ export const ensureUserDocumentExists = async (user, additionalData = {}) => {
         ...additionalData
       });
       
-      console.log('🔥 User document created successfully');
+      debugLog('🔥 User document created successfully');
     } else {
-      console.log('🔥 User document already exists');
+      debugLog('🔥 User document already exists');
     }
   } catch (error) {
     console.error('🔥 Error ensuring user document exists:', error);

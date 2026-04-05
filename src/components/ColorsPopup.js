@@ -4,6 +4,7 @@ import colorService from '../services/colorService';
 import timetableService from '../services/timetableService';
 import { notifyColorChanged } from '../utils/colorEvents';
 import { shouldShowBreakPeriod } from '../utils/dateUtils';
+import { debugLog } from '../utils/debug';
 import '../styles/components/ColorsPopup.css';
 
 /**
@@ -394,7 +395,7 @@ const ColorsPopup = ({ isVisible, onClose }) => {
         const timeSlots = timetableService.getTimeSlots();
         const subjectsWithColors = new Set();
         
-        console.log('ColorsPopup: Calculating used colors, timeSlots:', timeSlots.length);
+        debugLog('ColorsPopup: Calculating used colors, timeSlots:', timeSlots.length);
         
         // Collect all unique subjects from time slots
         timeSlots.forEach(slot => {
@@ -403,7 +404,7 @@ const ColorsPopup = ({ isVisible, onClose }) => {
             }
         });
         
-        console.log('ColorsPopup: Subjects with colors:', Array.from(subjectsWithColors));
+        debugLog('ColorsPopup: Subjects with colors:', Array.from(subjectsWithColors));
         
         // For each subject, get its actual color (whether custom or auto-generated)
         subjectsWithColors.forEach(subject => {
@@ -467,7 +468,7 @@ const ColorsPopup = ({ isVisible, onClose }) => {
             }
         });
         
-        console.log('ColorsPopup: Final used colors:', Array.from(usedColors));
+        debugLog('ColorsPopup: Final used colors:', Array.from(usedColors));
         return usedColors;
     }, [customColors, subjects]);
 

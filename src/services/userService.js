@@ -2,6 +2,7 @@
  * User Service
  * Handles Firestore operations for user management
  */
+import { debugLog } from '../utils/debug';
 
 let db;
 
@@ -13,7 +14,7 @@ export const initializeFirestore = () => {
     // Use Firebase v8 compat SDK that's loaded via HTML script tags
     if (typeof window !== 'undefined' && window.firebase) {
       db = window.firebase.firestore();
-      console.log('🔥 Firestore initialized using v8 compat SDK');
+      debugLog('🔥 Firestore initialized using v8 compat SDK');
       return db;
     } else {
       throw new Error('Firebase not available. Please check HTML script tags.');
@@ -57,26 +58,26 @@ export const isUsernameAvailable = async (username) => {
   }
   
   try {
-    console.log('🔍 Checking username availability for:', username);
-    console.log('🔍 Firebase project ID:', window.firebase?.app()?.options?.projectId);
+    debugLog('🔍 Checking username availability for:', username);
+    debugLog('🔍 Firebase project ID:', window.firebase?.app()?.options?.projectId);
     
     // Special handling for the "JZ" username
     if (username === "JZ") {
       const usersRef = db.collection('users');
       const querySnapshot = await usersRef.where('username', '==', username).get();
-      console.log('🔍 Querying for JZ username...');
+      debugLog('🔍 Querying for JZ username...');
       const isAvailable = querySnapshot.empty;
-      console.log('🔍 JZ username available:', isAvailable);
+      debugLog('🔍 JZ username available:', isAvailable);
       return isAvailable;
     }
     
     // Use v8 compat syntax for Firestore query
     const usersRef = db.collection('users');
     const querySnapshot = await usersRef.where('username', '==', username).get();
-    console.log('🔍 Querying for username:', username);
+    debugLog('🔍 Querying for username:', username);
     
     const isAvailable = querySnapshot.empty;
-    console.log('🔍 Username available:', isAvailable);
+    debugLog('🔍 Username available:', isAvailable);
     return isAvailable;
   } catch (error) {
     console.error('❌ Error checking username availability:', error);
@@ -104,23 +105,23 @@ export const createUserDocument = async (uid, userData) => {
   }
   
   try {
-    console.log('Creating user document for UID:', uid);
-    console.log('User data:', userData);
-    console.log('Firestore instance:', db);
-    console.log('Firebase project ID:', window.firebase?.app()?.options?.projectId);
-    console.log('Expected project ID: timetable-28639');
+    debugLog('Creating user document for UID:', uid);
+    debugLog('User data:', userData);
+    debugLog('Firestore instance:', db);
+    debugLog('Firebase project ID:', window.firebase?.app()?.options?.projectId);
+    debugLog('Expected project ID: timetable-28639');
     
     const userDoc = {
       ...userData,
       createdAt: new Date().toISOString()
     };
     
-    console.log('Final document data:', userDoc);
-    console.log('Document path will be: users/' + uid);
+    debugLog('Final document data:', userDoc);
+    debugLog('Document path will be: users/' + uid);
     
     // Use v8 compat syntax for Firestore
     await db.collection('users').doc(uid).set(userDoc);
-    console.log('User document created successfully');
+    debugLog('User document created successfully');
   } catch (error) {
     console.error('Error creating user document:', error);
     console.error('Error code:', error.code);
@@ -248,7 +249,7 @@ export const updateUserActivity = async (uid) => {
       lastActive: now.toISOString(),
       lastActiveTimestamp: now.getTime()
     });
-    console.log('✅ User activity updated for:', uid);
+    debugLog('✅ User activity updated for:', uid);
   } catch (error) {
     console.error('❌ Error updating user activity:', error);
     // Don't throw error to avoid breaking the app
@@ -290,7 +291,7 @@ export const getActiveUsers = async (minutesThreshold = 15) => {
     // Sort by most recently active
     activeUsers.sort((a, b) => a.minutesAgo - b.minutesAgo);
     
-    console.log(`📊 Found ${activeUsers.length} users active in last ${minutesThreshold} minutes`);
+    debugLog(`📊 Found ${activeUsers.length} users active in last ${minutesThreshold} minutes`);
     return activeUsers;
   } catch (error) {
     console.error('❌ Error getting active users:', error);

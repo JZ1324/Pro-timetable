@@ -1,4 +1,6 @@
 // Helper to integrate Firestore timetable service with existing code
+import { debugLog } from '../utils/debug';
+
 export class TimetableManager {
     constructor(firestoreService, localService) {
         this.firestoreService = firestoreService;
@@ -47,7 +49,7 @@ export class TimetableManager {
     saveToLocalStorage(timetableData) {
         try {
             localStorage.setItem('timetable-data', JSON.stringify(timetableData));
-            console.log('💾 Saved to localStorage');
+            debugLog('💾 Saved to localStorage');
         } catch (error) {
             console.error('❌ Error saving to localStorage:', error);
         }
@@ -93,7 +95,7 @@ export class TimetableManager {
             const localData = this.loadFromLocalStorage();
             if (localData && localData.timeSlots && localData.timeSlots.length > 0) {
                 await this.firestoreService.saveTimetable(localData);
-                console.log('✅ Local data synced to Firestore');
+                debugLog('✅ Local data synced to Firestore');
             }
         } catch (error) {
             console.error('❌ Error syncing to Firestore:', error);
