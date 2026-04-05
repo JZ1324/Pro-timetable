@@ -1,37 +1,39 @@
 /* Timetable Component Styles */
 .timetable-container {
     background-color: var(--bg-secondary);
-    border-radius: 16px;
-    padding: 25px; /* Reduced padding for better proportion */
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    border-radius: 20px;
+    padding: 22px 22px 24px;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.08);
     transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
     width: 100%;
-    max-width: 1100px; /* Set to requested 1000px max width */
-    min-width: 800px; /* Reasonable minimum width */
+    max-width: 1020px;
+    min-width: 0;
     margin: 0 auto; /* Center the container */
     animation: fadeInUp 0.8s cubic-bezier(0.25, 1, 0.5, 1);
     transform-origin: center;
     margin-top: 5px; /* Reduced from 10px */
-    margin-bottom: 20px; /* Reduced from 50px */
+    margin-bottom: 12px;
     max-height: none !important; /* Prevent height limitations */
     height: auto !important; /* Only take up space needed */
     overflow: visible;
+    border: 1px solid rgba(var(--shadow-color-rgb), 0.06);
 }
 
 .timetable-header {
-    margin-bottom: 25px;
+    margin-bottom: 22px;
     transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
     width: 100%;
     position: relative;
 }
 
 .timetable-header h2 {
-    font-size: 1.9rem;
+    font-size: 1.7rem;
     font-weight: 700;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     color: var(--text-primary);
     transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
     position: relative;
+    letter-spacing: -0.03em;
 }
 
 .main-container.sidebar-collapsed .timetable-header h2 {
@@ -55,10 +57,10 @@
 .template-controls {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 15px;
+    gap: 8px;
+    margin-bottom: 14px;
     align-items: center;
-    row-gap: 15px;
+    row-gap: 10px;
 }
 
 /* Media queries for smaller screens */
@@ -80,7 +82,7 @@
 
 .template-controls select,
 .template-controls input {
-    padding: 6px 8px;
+    padding: 7px 10px;
     border-radius: 8px;
     border: 1px solid var(--border-color);
     background-color: var(--bg-primary);
@@ -92,8 +94,8 @@
 }
 
 .default-timetable-btn {
-    padding: 6px 12px;
-    min-height: 32px;
+    padding: 7px 12px;
+    min-height: 34px;
     border-radius: 8px;
     background: linear-gradient(to bottom, var(--accent-color) 0%, var(--accent-hover) 100%);
     color: white;
@@ -126,7 +128,7 @@
 }
 
 .template-controls button {
-    padding: 6px 10px;
+    padding: 7px 10px;
     border-radius: 8px;
     background-color: var(--button-bg);
     color: var(--text-primary);
@@ -138,7 +140,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    min-height: 32px;
+    min-height: 34px;
     white-space: nowrap;
 }
 
@@ -515,6 +517,49 @@
     flex-direction: column;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Final shell refinements keep the timetable compact and centered even though
+   this stylesheet has a few legacy duplicated blocks below. */
+.current-day-display {
+    margin: 0 0 14px;
+    color: var(--text-secondary);
+}
+
+.current-day-display span {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.38rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(var(--shadow-color-rgb), 0.05);
+    color: var(--accent-color);
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.timetable {
+    grid-template-columns: 200px 1fr;
+}
+
+@media (max-width: 768px) {
+    .timetable-container {
+        max-width: 100%;
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .timetable-header h2 {
+        font-size: 1.45rem;
+    }
+
+    .current-day-display {
+        margin-bottom: 12px;
+    }
+
+    .timetable {
+        grid-template-columns: 150px 1fr;
+    }
 }
 
 .periods-column::-webkit-scrollbar {
@@ -993,6 +1038,48 @@
 .form-actions .delete-button:active {
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+/* Final width and spacing overrides */
+.current-day-display {
+    margin: 0 0 14px;
+    color: var(--text-secondary);
+}
+
+.current-day-display span {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.38rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(var(--shadow-color-rgb), 0.05);
+    color: var(--accent-color);
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.timetable {
+    grid-template-columns: 200px 1fr;
+}
+
+@media (max-width: 768px) {
+    .timetable-container {
+        max-width: 100%;
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .timetable-header h2 {
+        font-size: 1.45rem;
+    }
+
+    .current-day-display {
+        margin-bottom: 12px;
+    }
+
+    .timetable {
+        grid-template-columns: 150px 1fr;
+    }
 }
 
 .form-actions .cancel-button {
