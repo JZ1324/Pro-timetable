@@ -31,7 +31,6 @@ const envKeys = Object.keys(envParsed).reduce((prev, key) => {
   prev[`process.env.${key}`] = JSON.stringify(envParsed[key]);
   return prev;
 }, {
-  'process.env.NODE_ENV': JSON.stringify(NODE_ENV),
   // Provide default values for Firebase config to prevent errors
   'process.env.REACT_APP_FIREBASE_API_KEY': JSON.stringify(process.env.REACT_APP_FIREBASE_API_KEY || envParsed.REACT_APP_FIREBASE_API_KEY || ''),
   'process.env.REACT_APP_FIREBASE_AUTH_DOMAIN': JSON.stringify(process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || envParsed.REACT_APP_FIREBASE_AUTH_DOMAIN || ''),
