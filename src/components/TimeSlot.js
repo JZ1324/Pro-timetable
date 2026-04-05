@@ -6,6 +6,7 @@ import { debugLog } from '../utils/debug';
 const TimeSlot = ({ 
     slot, 
     onUpdate, 
+    getConflictingSlot,
     onRemove, 
     displaySettings, 
     isEditing, 
@@ -88,6 +89,12 @@ const TimeSlot = ({
             onCancelEditing();
         }, 150);
     };
+
+    const slotId = slot.id || `${slot.day}-${slot.period}`;
+    const conflictingSlot = getConflictingSlot
+        ? getConflictingSlot({ ...slot, ...editedSlot, day: slot.day, period: slot.period }, slotId)
+        : null;
+    const hasConflict = Boolean(conflictingSlot);
 
     // Determine class color based on subject
     const getSubjectColor = () => {
@@ -441,17 +448,27 @@ const TimeSlot = ({
                         placeholder="e.g., Mr Smith"
                     />
                 </div>
+                {hasConflict && (
+                    <div className="form-group" style={{ marginTop: '-2px' }}>
+                        <p style={{ color: '#b42318', fontWeight: 600, margin: 0 }}>
+                            Time conflict with {conflictingSlot.subject || `Period ${conflictingSlot.period}`} ({conflictingSlot.startTime} - {conflictingSlot.endTime})
+                        </p>
+                    </div>
+                )}
                 <div className="form-actions">
                     <button 
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
+                            if (hasConflict) return;
                             saveChanges();
                         }} 
                         className="save-button"
                         type="button"
+                        disabled={hasConflict}
+                        title={hasConflict ? 'Resolve schedule conflict before saving' : 'Save changes'}
                     >
-                        Save
+                        {hasConflict ? 'Resolve Conflict' : 'Save'}
                     </button>
                     <button 
                         onClick={(e) => {

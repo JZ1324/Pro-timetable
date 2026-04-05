@@ -18,7 +18,7 @@ import timetableService from '../services/timetableService';
 import { useSyncStatus } from '../hooks/useSyncStatus';
 import parseTimetable from '../utils/timetableParser';
 import convertStructuredDataToTimeSlots from '../utils/convertStructuredDataToTimeSlots';
-import { getCurrentSchoolDay, getCurrentPeriod, shouldShowBreakPeriod } from '../utils/dateUtils';
+import { getCurrentSchoolDay, getCurrentPeriod, shouldShowBreakPeriod, hasTimetableConflict } from '../utils/dateUtils';
 import { saveCurrentTimetableDay, saveCurrentTemplate, getLastActiveTemplate } from '../utils/userPreferences';
 import { useAuth } from './AuthProvider';
 import { isAdmin } from '../services/userService';
@@ -1208,6 +1208,58 @@ const Timetable = () => {
         setCurrentEditingSlot(null);
     };
 
+    const getConflictingSlot = (candidateSlot, excludedSlotId = null) => {
+        if (!candidateSlot) return null;
+
+        const candidate = {
+            day: candidateSlot.day,
+            startTime: candidateSlot.startTime,
+            endTime: candidateSlot.endTime,
+        };
+
+        return timeSlots.find((existingSlot) => {
+            const existingId = existingSlot.id || `${existingSlot.day}-${existingSlot.period}`;
+            if (excludedSlotId && existingId === excludedSlotId) return false;
+
+            return hasTimetableConflict(candidate, {
+                day: existingSlot.day,
+                startTime: existingSlot.startTime,
+                endTime: existingSlot.endTime,
+            });
+        }) || null;
+    };
+
+    const updateTimeSlotWithConflictCheck = (id, updatedSlot) => {
+        const index = timeSlots.findIndex(slot => 
+            slot.id === id || `${slot.day}-${slot.period}` === id
+        );
+
+        if (index === -1) {
+            updateTimeSlot(id, updatedSlot);
+            return;
+        }
+
+        const finalUpdatedSlot = {
+            ...updatedSlot,
+            day: timeSlots[index].day,
+            period: timeSlots[index].period,
+        };
+
+        const conflictingSlot = getConflictingSlot(finalUpdatedSlot, id);
+        if (conflictingSlot) {
+            const conflictLabel = conflictingSlot.subject || `Period ${conflictingSlot.period}`;
+            setNotification({
+                isOpen: true,
+                title: 'Schedule Conflict',
+                type: 'error',
+                message: `This class overlaps with "${conflictLabel}" (${conflictingSlot.startTime} - ${conflictingSlot.endTime}). Please adjust the time range.`,
+            });
+            return;
+        }
+
+        updateTimeSlot(id, updatedSlot);
+    };
+
     const removeTimeSlot = (id) => {
         const index = timeSlots.findIndex(slot => 
             slot.id === id || `${slot.day}-${slot.period}` === id
@@ -1448,7 +1500,8 @@ const Timetable = () => {
                     filterSlots={filterSlots}
                     getPeriodLabelRef={getPeriodLabelRef}
                     editingRowRef={editingRowRef}
-                    onUpdateSlot={updateTimeSlot}
+                    onUpdateSlot={updateTimeSlotWithConflictCheck}
+                    getConflictingSlot={getConflictingSlot}
                     onRemoveSlot={removeTimeSlot}
                     onStartEditing={handleStartEditing}
                     onCancelEditing={handleCancelEditing}

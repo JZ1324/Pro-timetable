@@ -197,12 +197,32 @@ export const shouldShowBreakPeriod = (periodName) => {
 export const parseTimeToMinutes = (timeString) => {
     if (!timeString || typeof timeString !== 'string') return null;
 
-    const match = timeString.trim().match(/^(\d{1,2}):(\d{2})$/);
+    const normalized = timeString.trim().toLowerCase().replace(/\s+/g, '');
+
+    // 24-hour format, e.g. 14:35
+    let match = normalized.match(/^(\d{1,2}):(\d{2})$/);
+    if (match) {
+        const hours = Number(match[1]);
+        const minutes = Number(match[2]);
+        if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+        return hours * 60 + minutes;
+    }
+
+    // 12-hour format, e.g. 8:35am / 12:10pm
+    match = normalized.match(/^(\d{1,2}):(\d{2})(am|pm)$/);
     if (!match) return null;
 
-    const hours = Number(match[1]);
+    let hours = Number(match[1]);
     const minutes = Number(match[2]);
-    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+    const meridiem = match[3];
+
+    if (hours < 1 || hours > 12 || minutes < 0 || minutes > 59) return null;
+
+    if (meridiem === 'am') {
+        if (hours === 12) hours = 0;
+    } else if (hours !== 12) {
+        hours += 12;
+    }
 
     return hours * 60 + minutes;
 };

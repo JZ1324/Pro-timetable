@@ -9,6 +9,7 @@ const TimetableGrid = ({
   getPeriodLabelRef,
   editingRowRef,
   onUpdateSlot,
+  getConflictingSlot,
   onRemoveSlot,
   onStartEditing,
   onCancelEditing,
@@ -64,6 +65,7 @@ const TimetableGrid = ({
                   key={slot.id || `${slot.day}-${slot.period}`}
                   slot={slot}
                   onUpdate={onUpdateSlot}
+                  getConflictingSlot={getConflictingSlot}
                   onRemove={onRemoveSlot}
                   isEditing={currentEditingSlot === (slot.id || `${slot.day}-${slot.period}`)}
                   onStartEditing={onStartEditing}
