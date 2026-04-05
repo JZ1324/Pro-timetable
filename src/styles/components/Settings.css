@@ -1,17 +1,19 @@
 /* Settings component styles */
 .settings-container {
     position: relative;
-    margin: 1rem 0;
+    margin: 0.7rem 0;
+    width: 100%;
 }
 
 .settings-toggle {
     background-color: var(--button-bg);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
-    padding: 0.5rem 1rem;
+    padding: 0.65rem 1rem;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.92rem;
+    width: 100%;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -28,10 +30,11 @@
     background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 1.5rem;
+    padding: 1rem;
     margin-top: 1rem;
     box-shadow: 0 4px 12px var(--shadow-color);
     animation: slideDown 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    width: 100%;
 }
 
 .settings-section {
@@ -50,9 +53,9 @@
 }
 
 .setting-item {
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.95rem;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     transition: all 0.3s ease;
     opacity: 0;
     animation: slideRight 0.4s ease forwards;
@@ -62,6 +65,10 @@
 .setting-item label {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    width: 100%;
     color: var(--text-primary);
     cursor: pointer;
 }
@@ -70,8 +77,18 @@
     margin-right: 0.8rem;
 }
 
+.settings-panel select {
+    min-width: 170px;
+    max-width: 100%;
+}
+
+.setting-item label select {
+    margin-left: auto;
+}
+
 .setting-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
     margin-top: 0.5rem;
 }
@@ -118,6 +135,21 @@
     margin-top: 0.3rem;
     margin-left: 1.9rem;
     opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+    .settings-panel {
+        padding: 0.9rem;
+    }
+
+    .setting-item label {
+        align-items: flex-start;
+    }
+
+    .setting-item label select {
+        margin-left: 0;
+        width: 100%;
+    }
 }
 
 .setting-help-text.error {
