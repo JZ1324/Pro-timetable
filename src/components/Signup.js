@@ -11,6 +11,10 @@ const Signup = ({ onSignupSuccess, onSwitchToLogin }) => {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [firebaseInitialized, setFirebaseInitialized] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState('weak');
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     // Track if component is mounted
@@ -40,6 +44,26 @@ const Signup = ({ onSignupSuccess, onSwitchToLogin }) => {
       isMounted = false;
     };
   }, []);
+
+  // Calculate password strength
+  const calculatePasswordStrength = (pwd) => {
+    if (!pwd) return 'weak';
+    const hasUppercase = /[A-Z]/.test(pwd);
+    const hasNumber = /\d/.test(pwd);
+    const hasSpecial = /[@$!%*#?&]/.test(pwd);
+    const isLong = pwd.length >= 12;
+    
+    const strength = [hasUppercase, hasNumber, hasSpecial, isLong].filter(Boolean).length;
+    if (strength <= 1) return 'weak';
+    if (strength <= 2) return 'medium';
+    return 'strong';
+  };
+
+  const handlePasswordChange = (e) => {
+    const value = e.target.value;
+    setPassword(value);
+    setPasswordStrength(calculatePasswordStrength(value));
+  };
 
   const validateForm = () => {
     setError(''); // Clear previous errors
@@ -135,6 +159,15 @@ const Signup = ({ onSignupSuccess, onSwitchToLogin }) => {
             }
           }
         }, 2000);
+        setShowSuccess(true);
+        setPasswordStrength('weak');
+        
+        // Hide success animation after 2 seconds
+        setTimeout(() => {
+          if (isMounted) {
+            setShowSuccess(false);
+          }
+        }, 2000);
       }
     } catch (error) {
       console.error('Registration error:', error);
@@ -194,27 +227,55 @@ const Signup = ({ onSignupSuccess, onSwitchToLogin }) => {
         
         <div className="form-group">
           <label htmlFor="signup-password">Password</label>
-          <input
-            type="password"
-            id="signup-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isLoading}
-            placeholder="Create a password"
-          />
+          <div className="password-input-group">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              id="signup-password"
+              value={password}
+              onChange={handlePasswordChange}
+              disabled={isLoading}
+              placeholder="Create a password"
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+              disabled={isLoading}
+              title={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? '👁️‍🗨️' : '👁️'}
+            </button>
+          </div>
+          {password && (
+            <div className={`password-strength strength-${passwordStrength}`}>
+              <div className="strength-label">Strength: {passwordStrength}</div>
+              <div className="strength-bar"></div>
+            </div>
+          )}
           <p className="input-hint">At least 8 characters with letters and numbers</p>
         </div>
         
         <div className="form-group">
           <label htmlFor="confirm-password">Confirm Password</label>
-          <input
-            type="password"
-            id="confirm-password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            disabled={isLoading}
-            placeholder="Confirm your password"
-          />
+          <div className="password-input-group">
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              id="confirm-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={isLoading}
+              placeholder="Confirm your password"
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              disabled={isLoading}
+              title={showConfirmPassword ? 'Hide password' : 'Show password'}
+            >
+              {showConfirmPassword ? '👁️‍🗨️' : '👁️'}
+            </button>
+          </div>
         </div>
         
         <div className="form-submit-container" style={{marginTop: '20px', marginBottom: '15px', position: 'relative', zIndex: 100}}>
@@ -224,8 +285,14 @@ const Signup = ({ onSignupSuccess, onSwitchToLogin }) => {
             disabled={isLoading}
             style={{display: 'block !important', width: '100%', visibility: 'visible !important'}}
           >
+            {isLoading && <span className="spinner"></span>}
             {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
+          {showSuccess && (
+            <div className="success-animation">
+              <span className="success-checkmark">✓</span>
+            </div>
+          )}
         </div>
         
         <div className="switch-form">

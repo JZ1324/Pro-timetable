@@ -18,6 +18,7 @@ const Login = ({ onLoginSuccess }) => {
   const [firebaseInitialized, setFirebaseInitialized] = useState(false);
   const [activeTab, setActiveTab] = useState('login'); // 'login', 'reset', or 'signup'
   const [showAdminTerminal, setShowAdminTerminal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [terminalPosition, setTerminalPosition] = useState({ x: 300, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
 
@@ -233,14 +234,25 @@ const Login = ({ onLoginSuccess }) => {
       
       <div className="form-group">
         <label htmlFor="password">Password</label>
-        <input
-          type="password"
-          id="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={isLoading}
-          placeholder="Enter your password"
-        />
+        <div className="password-input-group">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
+            placeholder="Enter your password"
+          />
+          <button
+            type="button"
+            className="password-toggle"
+            onClick={() => setShowPassword(!showPassword)}
+            disabled={isLoading}
+            title={showPassword ? 'Hide password' : 'Show password'}
+          >
+            {showPassword ? '👁️‍🗨️' : '👁️'}
+          </button>
+        </div>
       </div>
       
       <button 
