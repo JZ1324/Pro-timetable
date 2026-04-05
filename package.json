@@ -12,7 +12,7 @@
     "start": "webpack serve --mode development",
     "build": "webpack --mode production && npm run postbuild",
     "postbuild": "node ./scripts/build/fix-html-on-build.js",
-    "vercel-build": "node ./scripts/configs/vercel-build.js",
+    "vercel-build": "npm run build",
     "test": "jest",
     "test:enhancer": "node --experimental-modules scripts/testing/test-enhancer.js",
     "deploy": "npm run build && firebase deploy",
