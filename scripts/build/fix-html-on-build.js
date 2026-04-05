@@ -13,9 +13,7 @@ const helperScripts = [
     '/path-fix.js',
     '/vercel-path-fix.js',
     '/EnglishTruncationFixDirectGlobal.js',
-    '/EnglishTruncationFixStandalone.js',
-    '/compatibility-polyfill.js',
-    '/webpack-config-override.js'
+    '/EnglishTruncationFixStandalone.js'
 ];
 
 function injectMissingHelperScripts(htmlContent) {
