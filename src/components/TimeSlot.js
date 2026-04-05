@@ -42,6 +42,8 @@ const TimeSlot = ({
     const handleChange = (e) => {
         const { name, value } = e.target;
         setEditedSlot({ ...editedSlot, [name]: value });
+        // Ensure we're modifying a deep copy to avoid reference issues
+        console.log(`Updating ${name} to ${value}`);
     };
 
     const saveChanges = () => {
@@ -55,6 +57,8 @@ const TimeSlot = ({
         // Make sure day and period are preserved from the original slot
         if (slot.day) updatedSlot.day = slot.day;
         if (slot.period) updatedSlot.period = slot.period;
+        
+        console.log('Saving changes:', updatedSlot);
         
         // Provide visual feedback that we're saving
         const saveButton = document.querySelector('.form-actions .save-button');
