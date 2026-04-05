@@ -193,3 +193,49 @@ export const shouldShowBreakPeriod = (periodName) => {
     
     return false;
 };
+
+export const parseTimeToMinutes = (timeString) => {
+    if (!timeString || typeof timeString !== 'string') return null;
+
+    const match = timeString.trim().match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return null;
+
+    const hours = Number(match[1]);
+    const minutes = Number(match[2]);
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+
+    return hours * 60 + minutes;
+};
+
+export const normalizeDay = (dayValue = '') => dayValue.toString().trim().toLowerCase();
+
+export const hasTimeRangeConflict = (startA, endA, startB, endB) => {
+    const aStart = parseTimeToMinutes(startA);
+    const aEnd = parseTimeToMinutes(endA);
+    const bStart = parseTimeToMinutes(startB);
+    const bEnd = parseTimeToMinutes(endB);
+
+    if ([aStart, aEnd, bStart, bEnd].some((v) => v === null)) return false;
+    if (aEnd <= aStart || bEnd <= bStart) return false;
+
+    return aStart < bEnd && bStart < aEnd;
+};
+
+export const hasTimetableConflict = (entryA, entryB) => {
+    if (!entryA || !entryB) return false;
+    if (normalizeDay(entryA.day) !== normalizeDay(entryB.day)) return false;
+
+    return hasTimeRangeConflict(entryA.startTime, entryA.endTime, entryB.startTime, entryB.endTime);
+};
+
+export const findTimetableConflicts = (entries = []) => {
+    const conflicts = [];
+    for (let i = 0; i < entries.length; i += 1) {
+        for (let j = i + 1; j < entries.length; j += 1) {
+            if (hasTimetableConflict(entries[i], entries[j])) {
+                conflicts.push([entries[i], entries[j]]);
+            }
+        }
+    }
+    return conflicts;
+};

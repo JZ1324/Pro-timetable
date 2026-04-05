@@ -108,6 +108,46 @@ export const validateTimeFormat = (time) => {
 };
 
 /**
+ * Validate required fields in an object
+ * @param {object} fields - map of { fieldName: value }
+ * @returns {object} { valid: boolean, error: string }
+ */
+export const validateRequiredFields = (fields = {}) => {
+  const entries = Object.entries(fields);
+  const missing = entries.find(([, value]) => value === undefined || value === null || `${value}`.trim() === '');
+  if (missing) {
+    return { valid: false, error: `${missing[0]} is required` };
+  }
+  return { valid: true, error: '' };
+};
+
+/**
+ * Validate a timetable entry payload
+ * @param {object} entry - timetable class entry
+ * @returns {object} { valid: boolean, error: string }
+ */
+export const validateTimetableEntry = (entry = {}) => {
+  const required = validateRequiredFields({
+    className: entry.className,
+    day: entry.day,
+    startTime: entry.startTime,
+    endTime: entry.endTime,
+  });
+  if (!required.valid) return required;
+
+  const className = validateClassName(entry.className);
+  if (!className.valid) return className;
+
+  const startTime = validateTimeFormat(entry.startTime);
+  if (!startTime.valid) return { valid: false, error: `Start ${startTime.error.toLowerCase()}` };
+
+  const endTime = validateTimeFormat(entry.endTime);
+  if (!endTime.valid) return { valid: false, error: `End ${endTime.error.toLowerCase()}` };
+
+  return { valid: true, error: '' };
+};
+
+/**
  * Rate limiting utility
  * Prevents excessive API calls
  */

@@ -6,10 +6,22 @@ import {
   isAdminCredentials
 } from '../services/authService';
 import { updateUserDocument } from '../services/userService';
+import { useToast } from './ToastProvider';
+import { validateEmail } from '../utils/validation';
+import { ensureSafeInput } from '../utils/security';
+import { runWithRetryAndTimeout, mapApiError } from '../utils/apiUtils';
+import { ClientRateLimiter } from '../utils/rateLimitUtils';
+import { trackEvent } from '../utils/analytics';
+import { useFormPersistence, clearPersistedForm } from '../hooks/useFormPersistence';
+import { isFeatureEnabled } from '../utils/featureFlags';
 import Signup from './Signup';
 import '../styles/components/Login.css';
 
+const loginRateLimiter = new ClientRateLimiter(5, 15 * 60 * 1000);
+
 const Login = ({ onLoginSuccess }) => {
+  const toast = useToast();
+  const persistForms = isFeatureEnabled('enableTimetableAutosave');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -21,6 +33,13 @@ const Login = ({ onLoginSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [terminalPosition, setTerminalPosition] = useState({ x: 300, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+
+  useFormPersistence(
+    'pt-login-form',
+    { email },
+    { email: setEmail },
+    { enabled: persistForms }
+  );
 
   useEffect(() => {
     // Track if component is mounted
@@ -61,7 +80,29 @@ const Login = ({ onLoginSuccess }) => {
       isMounted = false;
     };
     
-    console.log("Login attempt with:", email, password);
+    let safeEmail = email;
+    try {
+      safeEmail = ensureSafeInput(email);
+    } catch (securityError) {
+      setError('Invalid input detected.');
+      toast.error('Please remove unsupported characters and try again.');
+      return;
+    }
+
+    if (!loginRateLimiter.isAllowed()) {
+      const seconds = Math.ceil(loginRateLimiter.getRetryAfterMs() / 1000);
+      setError(`Too many attempts. Try again in about ${seconds} seconds.`);
+      toast.error('Too many login attempts. Please wait and retry.');
+      return;
+    }
+
+    const emailValidation = validateEmail(safeEmail);
+    if (!emailValidation.valid) {
+      setError(emailValidation.error);
+      return;
+    }
+
+    console.log('Login attempt with:', safeEmail);
     
     // Special case for admin terminal
     if (email === 'Monkeopolis') {
@@ -84,7 +125,7 @@ const Login = ({ onLoginSuccess }) => {
       return;
     }
     
-    if (!email || !password) {
+    if (!safeEmail || !password) {
       setError('Please enter both email and password');
       return;
     }
@@ -99,7 +140,14 @@ const Login = ({ onLoginSuccess }) => {
     setSuccessMessage('');
 
     try {
-      const userCredential = await signIn(email, password);
+      const userCredential = await runWithRetryAndTimeout(
+        () => signIn(safeEmail, password),
+        {
+          timeoutMs: 12000,
+          retries: 1,
+          shouldRetry: (err) => /network|timed out/i.test(err?.message || ''),
+        }
+      );
       const user = userCredential.user;
       
       console.log('Login successful:', user.uid);
@@ -110,6 +158,9 @@ const Login = ({ onLoginSuccess }) => {
         if (onLoginSuccess) {
           onLoginSuccess(user);
         }
+        trackEvent('login_success', { uid: user.uid });
+        clearPersistedForm('pt-login-form');
+        toast.success('Signed in successfully.');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -122,8 +173,10 @@ const Login = ({ onLoginSuccess }) => {
         } else if (error.code === 'auth/too-many-requests') {
           setError('Too many failed login attempts. Please try again later.');
         } else {
-          setError('Login failed. Please try again.');
+          setError(mapApiError(error));
         }
+        trackEvent('login_failed', { code: error.code || 'unknown' });
+        toast.error('Sign in failed. Please try again.');
       }
     } finally {
       // Only update state if component is still mounted
@@ -143,6 +196,12 @@ const Login = ({ onLoginSuccess }) => {
       isMounted = false;
     };
     
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.valid) {
+      setError(emailValidation.error);
+      return;
+    }
+
     if (!email) {
       setError('Please enter your email address');
       return;
@@ -158,12 +217,21 @@ const Login = ({ onLoginSuccess }) => {
     setSuccessMessage('');
 
     try {
-      await resetPassword(email);
+      await runWithRetryAndTimeout(
+        () => resetPassword(email),
+        {
+          timeoutMs: 12000,
+          retries: 1,
+          shouldRetry: (err) => /network|timed out/i.test(err?.message || ''),
+        }
+      );
       
       // Only update state if component is still mounted
       if (isMounted) {
         setSuccessMessage('Password reset link has been sent to your email.');
         setEmail('');
+        trackEvent('password_reset_requested');
+        toast.info('Password reset email sent.');
       }
     } catch (error) {
       console.error('Password reset error:', error);
@@ -175,8 +243,9 @@ const Login = ({ onLoginSuccess }) => {
         } else if (error.code === 'auth/invalid-email') {
           setError('Invalid email address');
         } else {
-          setError('Failed to send password reset email. Please try again.');
+          setError(mapApiError(error));
         }
+        toast.error('Failed to send password reset email.');
       }
     } finally {
       // Only update state if component is still mounted

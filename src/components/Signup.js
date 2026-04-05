@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { initializeAuth, registerUser } from '../services/authService';
+import { useToast } from './ToastProvider';
+import { validateUsername, validateEmail, validatePassword } from '../utils/validation';
+import { ensureSafeInput } from '../utils/security';
+import { runWithRetryAndTimeout, mapApiError } from '../utils/apiUtils';
+import { ClientRateLimiter } from '../utils/rateLimitUtils';
+import { trackEvent } from '../utils/analytics';
+import { useFormPersistence, clearPersistedForm } from '../hooks/useFormPersistence';
+import { isFeatureEnabled } from '../utils/featureFlags';
 import '../styles/components/Signup.css';
 
+const signupRateLimiter = new ClientRateLimiter(3, 15 * 60 * 1000);
+
 const Signup = ({ onSignupSuccess, onSwitchToLogin }) => {
+  const toast = useToast();
+  const persistForms = isFeatureEnabled('enableTimetableAutosave');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,6 +27,13 @@ const Signup = ({ onSignupSuccess, onSwitchToLogin }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState('weak');
   const [showSuccess, setShowSuccess] = useState(false);
+
+  useFormPersistence(
+    'pt-signup-form',
+    { username, email },
+    { username: setUsername, email: setEmail },
+    { enabled: persistForms }
+  );
 
   useEffect(() => {
     // Track if component is mounted
@@ -67,9 +86,37 @@ const Signup = ({ onSignupSuccess, onSwitchToLogin }) => {
 
   const validateForm = () => {
     setError(''); // Clear previous errors
+
+    let safeUsername = username;
+    let safeEmail = email;
+    try {
+      safeUsername = ensureSafeInput(username);
+      safeEmail = ensureSafeInput(email);
+    } catch (securityError) {
+      setError('Input contains unsafe content');
+      return false;
+    }
     
     if (!username || !email || !password || !confirmPassword) {
       setError('All fields are required');
+      return false;
+    }
+
+    const usernameResult = validateUsername(safeUsername);
+    if (!usernameResult.valid) {
+      setError(usernameResult.error);
+      return false;
+    }
+
+    const emailResult = validateEmail(safeEmail);
+    if (!emailResult.valid) {
+      setError(emailResult.error);
+      return false;
+    }
+
+    const passwordResult = validatePassword(password);
+    if (!passwordResult.valid) {
+      setError(passwordResult.error);
       return false;
     }
     
@@ -123,6 +170,13 @@ const Signup = ({ onSignupSuccess, onSwitchToLogin }) => {
       return;
     }
 
+    if (!signupRateLimiter.isAllowed()) {
+      const seconds = Math.ceil(signupRateLimiter.getRetryAfterMs() / 1000);
+      setError(`Too many signup attempts. Try again in about ${seconds} seconds.`);
+      toast.error('Too many signup attempts. Please wait and retry.');
+      return;
+    }
+
     if (!firebaseInitialized) {
       setError('Authentication service not ready yet. Please try again.');
       return;
@@ -134,7 +188,14 @@ const Signup = ({ onSignupSuccess, onSwitchToLogin }) => {
 
     try {
       console.log('Attempting to register user:', username, email);
-      const userCredential = await registerUser(username, email, password);
+      const userCredential = await runWithRetryAndTimeout(
+        () => registerUser(username, email, password),
+        {
+          timeoutMs: 12000,
+          retries: 1,
+          shouldRetry: (err) => /network|timed out/i.test(err?.message || ''),
+        }
+      );
       const user = userCredential.user;
       
       console.log('Registration successful:', user.uid);
@@ -168,6 +229,9 @@ const Signup = ({ onSignupSuccess, onSwitchToLogin }) => {
             setShowSuccess(false);
           }
         }, 2000);
+        clearPersistedForm('pt-signup-form');
+        trackEvent('signup_success', { uid: user.uid });
+        toast.success('Account created successfully.');
       }
     } catch (error) {
       console.error('Registration error:', error);
@@ -181,8 +245,10 @@ const Signup = ({ onSignupSuccess, onSwitchToLogin }) => {
         } else if (error.message === 'Temporary emails are not allowed.') {
           setError('Disposable email providers are not allowed');
         } else {
-          setError(error.message || 'Registration failed. Please try again.');
+          setError(mapApiError(error));
         }
+        trackEvent('signup_failed', { code: error.code || 'unknown' });
+        toast.error('Registration failed. Please try again.');
       }
     } finally {
       // Only update state if component is still mounted
