@@ -161,7 +161,8 @@
 
 .header-main h2 {
     margin: 0;
-    flex: 1;
+    flex: 0;
+    white-space: nowrap;
 }
 
 .header-admin {
@@ -503,12 +504,19 @@
 
 .timetable::-webkit-scrollbar {
     display: none;
-
-/* Reveal styling for timetable slots */
-.time-slot.reveal { opacity: 0; transform: translateY(6px); }
-.time-slot.reveal.is-visible { opacity: 1; transform: translateY(0); }
     width: 0;
     background: transparent;
+}
+
+/* Reveal styling for timetable slots */
+.time-slot.reveal {
+    opacity: 0;
+    transform: translateY(6px);
+}
+
+.time-slot.reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .periods-column {
@@ -689,16 +697,16 @@
 /* Larger default size for all periods; allow content to expand */
 .timetable .period-label {
     height: auto;           /* override fixed heights above */
-    min-height: 0;          /* allow true content-fit */
-    padding: 3px;           /* ultra-compact */
+    min-height: 70px;       /* ensure minimum height for text */
+    padding: 12px 8px;      /* reasonable padding */
     transition: height 180ms ease; /* smooth expand/shrink */
     will-change: height;
 }
 
 .timetable .period-row {
     height: auto;           /* override fixed heights above */
-    min-height: 0;          /* allow true content-fit */
-    padding: 3px 3px 2px;   /* reduce bottom by 1px to offset border */
+    min-height: 100px;      /* ensure minimum height for content */
+    padding: 12px 14px;     /* reasonable padding */
     transition: height 180ms ease, padding 180ms ease; /* smooth expand/shrink */
     will-change: height;
 }
@@ -741,12 +749,13 @@
 
 .add-time-slot button {
     width: 100%;
-    padding: 3px; /* ultra-compact */
+    padding: 8px 10px;
     border: 1px dashed var(--border-color);
     background-color: transparent;
     color: var(--text-secondary);
     border-radius: 6px;
     transition: all 0.2s ease;
+    font-size: 0.9rem;
 }
 
 .add-time-slot button:hover {
