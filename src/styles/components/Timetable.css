@@ -6,7 +6,7 @@
     box-shadow: 0 14px 36px rgba(0, 0, 0, 0.08);
     transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
     width: 100%;
-    max-width: 1020px;
+    max-width: 900px;
     min-width: 0;
     margin: 0 auto; /* Center the container */
     animation: fadeInUp 0.8s cubic-bezier(0.25, 1, 0.5, 1);
@@ -539,7 +539,7 @@
 }
 
 .timetable {
-    grid-template-columns: 200px 1fr;
+    grid-template-columns: 180px 1fr;
 }
 
 @media (max-width: 768px) {
@@ -558,7 +558,7 @@
     }
 
     .timetable {
-        grid-template-columns: 150px 1fr;
+        grid-template-columns: 138px 1fr;
     }
 }
 
