@@ -1,23 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { animate as anime } from 'animejs';
-import TimeSlot from './TimeSlot';
-import ImportButton from './ImportButton';
-import ImportTimetable from './ImportTimetable';
 import TemplateNamePopup from './TemplateNamePopup';
 import NotificationPopup from './NotificationPopup';
 import ConfirmDialog from './ConfirmDialog';
 import ColorsPopup from './ColorsPopup';
 import PracticeReminderPopup from './PracticeReminderPopup';
 import MobileDetector from './MobileDetector';
+import TimetableDaySelector from './timetable/TimetableDaySelector';
+import TimetableGrid from './timetable/TimetableGrid';
+import TimetableHeaderPanel from './timetable/TimetableHeaderPanel';
+import {
+    SCHOOL_DAYS,
+    PERIOD_SCHEDULE,
+    createEmptySlotForPeriod,
+    getDayName
+} from './timetable/timetableConfig';
 import timetableService from '../services/timetableService';
 import { useSyncStatus } from '../hooks/useSyncStatus';
-import FirestoreTimetableService from '../services/firestoreTimetableService';
-import { TimetableManager } from '../services/timetableManager';
-import { getFirestore } from 'firebase/firestore';
 import parseTimetable from '../utils/timetableParser';
 import convertStructuredDataToTimeSlots from '../utils/convertStructuredDataToTimeSlots';
 import { getCurrentSchoolDay, getCurrentPeriod, shouldShowBreakPeriod } from '../utils/dateUtils';
-import { saveCurrentTimetableDay, getLastActiveTimetableDay, saveCurrentTemplate, getLastActiveTemplate } from '../utils/userPreferences';
+import { saveCurrentTimetableDay, saveCurrentTemplate, getLastActiveTemplate } from '../utils/userPreferences';
 import { useAuth } from './AuthProvider';
 import { isAdmin } from '../services/userService';
 import AdminTerminal from './AdminTerminal';
@@ -37,8 +39,6 @@ import '../styles/components/PracticeReminderPopup.css';
 
 const Timetable = () => {
     const { user } = useAuth();
-    const timetableRef = useRef(null);
-    const dayButtonsRef = useRef([]);
     
     // Use shared sync status hook
     const { isFirestoreReady, firestoreService, timetableManager } = useSyncStatus();
@@ -88,7 +88,6 @@ const Timetable = () => {
     const [editingRowHeight, setEditingRowHeight] = useState(null);
     const [practiceReminders, setPracticeReminders] = useState({});
     const [activePracticePopups, setActivePracticePopups] = useState([]);
-    const [showPracticeReminderSettings, setShowPracticeReminderSettings] = useState(false);
     
     // Animation functions - Using CSS animations for better compatibility
     const animateTimeSlots = () => {
@@ -358,19 +357,6 @@ const Timetable = () => {
     const labelRefs = useRef({});
     const notificationIntervalRef = useRef(null);
 
-    // Get all days from 1 to 10
-    const days = Array.from({ length: 10 }, (_, i) => i + 1);
-    
-    // Get day name based on day number
-    const getDayName = (dayNum) => {
-        const dayNames = {
-            1: 'Monday (Week A)', 2: 'Tuesday (Week A)', 3: 'Wednesday (Week A)', 4: 'Thursday (Week A)', 5: 'Friday (Week A)',
-            6: 'Monday (Week B)', 7: 'Tuesday (Week B)', 8: 'Wednesday (Week B)', 
-            9: 'Thursday (Week B)', 10: 'Friday (Week B)'
-        };
-        return dayNames[dayNum] || `Day ${dayNum}`;
-    };
-    
     // Handle day selection with improved event handling
     const handleDayChange = (event, day) => {
         event.preventDefault();
@@ -1190,23 +1176,6 @@ const Timetable = () => {
         }
     };
 
-    const addTimeSlot = () => {
-        const newSlot = { 
-            id: Date.now(), 
-            day: currentDay,
-            period: '', 
-            subject: '', 
-            startTime: '', 
-            endTime: '',
-            room: '',
-            teacher: '',
-            code: ''
-        };
-        
-        timetableService.addTimeSlot(newSlot);
-        setTimeSlots([...timeSlots, newSlot]);
-    };
-
     const updateTimeSlot = (id, updatedSlot) => {
         const index = timeSlots.findIndex(slot => 
             slot.id === id || `${slot.day}-${slot.period}` === id
@@ -1415,26 +1384,10 @@ const Timetable = () => {
         }
     };
 
-    // Helper function to load timetable data from Firestore when available
-    const loadTimetableData = async () => {
-        try {
-            if (isFirestoreReady && timetableManager) {
-                // Load from Firestore
-                const timetableData = await timetableManager.loadTimetable();
-                if (timetableData && timetableData.timeSlots) {
-                    setTimeSlots(timetableData.timeSlots);
-                    if (timetableData.currentDay) {
-                        setCurrentDay(timetableData.currentDay);
-                    }
-                    debugLog('✅ Timetable loaded from Firestore');
-                    return true;
-                }
-            }
-            return false; // Indicate that Firestore load was not successful
-        } catch (error) {
-            console.error('❌ Error loading timetable from Firestore:', error);
-            return false; // Fall back to localStorage
-        }
+    const addEmptySlotForPeriod = (period) => {
+        const newSlot = createEmptySlotForPeriod(currentDay, period);
+        timetableService.addTimeSlot(newSlot);
+        setTimeSlots([...timeSlots, newSlot]);
     };
     
     // Auto-save to Firestore when timeSlots change (debounced)
@@ -1448,6 +1401,9 @@ const Timetable = () => {
             return () => clearTimeout(timeoutId);
         }
     }, [timeSlots, isFirestoreReady]);
+
+    const periods = getPeriods();
+    const currentSchoolDay = getCurrentSchoolDay();
     
     return (
         <MobileDetector
@@ -1459,235 +1415,52 @@ const Timetable = () => {
             editMode={editMode}
         >
             <div className="timetable-container">
-            <div className="timetable-header">
-                <div className="header-main">
-                    <h2>School Timetable</h2>
-                    {isAdminUser && (
-                        <div className="admin-controls header-admin">
-                            <button 
-                                className="admin-button-header" 
-                                onClick={() => setShowAdminDashboard(true)}
-                                title="Open Admin Dashboard"
-                            >
-                                🛠️
-                            </button>
-                            <button 
-                                className="admin-button-header terminal" 
-                                onClick={() => setShowAdminTerminal(true)}
-                                title="Open Admin Terminal"
-                            >
-                                💻
-                            </button>
-                        </div>
-                    )}
-                </div>
-                <div className="current-day-display">
-                    <span>{getDayName(currentDay)}</span>
-                </div>
-                
-                <div className="template-controls">
-                    <div className="default-timetable-dropdown-container">
-                        <select 
-                            value={currentTemplate} 
-                            onChange={(e) => loadTemplate(e.target.value)}
-                            className="default-timetable-btn"
-                            aria-label="Choose a timetable template"
-                        >
-                            <option value="" disabled>Default Timetable</option>
-                            {templates.map(template => (
-                                <option key={template} value={template}>
-                                    {template.charAt(0).toUpperCase() + template.slice(1)}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    
-                    {currentTemplate && currentTemplate !== 'school' && (
-                        <button 
-                            className="delete-template-btn" 
-                            onClick={() => deleteTemplate(currentTemplate)}
-                        >
-                            Delete
-                        </button>
-                    )}
-                    
-                    <div className="save-template">
-                        <button 
-                            className="save-template-btn"
-                            onClick={saveTemplate}
-                        >
-                            Save Template
-                        </button>
-                    </div>
-                    
-                    <button 
-                        className={`edit-mode-toggle ${editMode ? 'active' : ''}`}
-                        onClick={() => {
-                            setEditMode(!editMode);
-                            // Close any open editing form when toggling edit mode
-                            setCurrentEditingSlot(null);
-                        }}
-                    >
-                        {editMode ? 'View Mode' : 'Edit Mode'}
-                    </button>
-                    
-                    <button 
-                        className="color-legend-btn"
-                        onClick={() => openColorsWindow()}
-                    >
-                        Colours
-                    </button>
-                    
-                    <ImportButton onImport={importTimetable} />
-                </div>
-                
-                {editMode && (
-                    <div className="edit-mode-hint">
-                        <p>Click directly on any class to edit its details, or use the <span className="edit-button-hint">Edit</span> button</p>
-                    </div>
-                )}
-                
-                <div className="day-selector">
-                    {days.map(day => {
-                        // Get today's real school day number
-                        const todayDay = getCurrentSchoolDay();
-                        const isToday = day === todayDay;
-                        
-                        // Check if it's a weekend
-                        const today = new Date();
-                        
-                        const dayOfWeek = today.getDay(); // 0 = Sunday, 6 = Saturday
-                        const isSaturday = dayOfWeek === 6;
-                        const isSunday = dayOfWeek === 0;
-                        
-                        // Helper function to get appropriate hover text
-                        const getHoverText = () => {
-                            if (!isToday) return null;
-                            if (isSaturday) return "2 days";
-                            if (isSunday) return "1 day";
-                            return "Today";
-                        };
-                        
-                        // Determine the title for the button
-                        let titleText = getDayName(day);
-                        if (isToday) {
-                            const hoverText = getHoverText();
-                            titleText += ` (${hoverText})`;
-                        }
-                        
-                        return (
-                            <button 
-                                key={day} 
-                                type="button"
-                                className={`day-button ${currentDay === day ? 'active' : ''} ${isToday ? 'current-day' : ''}`}
-                                onClick={(e) => handleDayChange(e, day)}
-                                title={titleText}
-                            >
-                                <span>Day {day}</span>
-                                {isToday && <span className="today-text">{getHoverText()}</span>}
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
+                <TimetableHeaderPanel
+                    currentDayLabel={getDayName(currentDay)}
+                    isAdminUser={isAdminUser}
+                    onOpenAdminDashboard={() => setShowAdminDashboard(true)}
+                    onOpenAdminTerminal={() => setShowAdminTerminal(true)}
+                    currentTemplate={currentTemplate}
+                    templates={templates}
+                    onTemplateChange={loadTemplate}
+                    onDeleteTemplate={deleteTemplate}
+                    onSaveTemplate={saveTemplate}
+                    editMode={editMode}
+                    onToggleEditMode={() => {
+                        setEditMode(!editMode);
+                        setCurrentEditingSlot(null);
+                    }}
+                    onOpenColors={openColorsWindow}
+                    onImport={importTimetable}
+                />
 
-            <div className="timetable">
-                <div className="periods-column">
-                    {getPeriods().map(period => {
-                        const isEditingThisPeriod = filterSlots(currentDay, period).some(
-                            slot => currentEditingSlot === (slot.id || `${slot.day}-${slot.period}`)
-                        );
-                        
-                        return (
-                            <div 
-                                key={period} 
-                                className={`period-label ${isEditingThisPeriod ? 'editing' : ''}`}
-                                data-period={period}
-                                ref={getPeriodLabelRef(period)}
-                            >
-                                <span>{period}</span>
-                                {period === '1' && <span className="time">8:35am–9:35am</span>}
-                                {period === '2' && <span className="time">9:40am–10:40am</span>}
-                                {period === 'Tutorial' && <span className="time">10:45am–10:55am</span>}
-                                {period === 'Recess' && <span className="time">10:55am–11:25am</span>}
-                                {period === '3' && <span className="time">11:25am–12:25pm</span>}
-                                {period === '4' && <span className="time">12:30pm–1:30pm</span>}
-                                {period === 'Lunch' && <span className="time">1:30pm–2:25pm</span>}
-                                {period === '5' && <span className="time">2:25pm–3:25pm</span>}
-                                {period === 'After School' && <span className="time">3:35pm–4:30pm</span>}
-                            </div>
-                        );
-                    })}
-                </div>
-                
-                <div className="day-column">
-                    {getPeriods().map(period => {
-                        const isEditingThisPeriod = filterSlots(currentDay, period).some(
-                            slot => currentEditingSlot === (slot.id || `${slot.day}-${slot.period}`)
-                        );
-                        
-                        return (
-                            <div 
-                                key={period} 
-                                className={`period-row ${isEditingThisPeriod ? 'has-editing-slot' : ''}`}
-                                data-period={period}
-                                ref={isEditingThisPeriod ? editingRowRef : null}
-                            >
-                                {filterSlots(currentDay, period).map(slot => (
-                                    <TimeSlot
-                                        key={slot.id || `${slot.day}-${slot.period}`}
-                                        slot={slot}
-                                        onUpdate={updateTimeSlot}
-                                        onRemove={removeTimeSlot}
-                                        isEditing={currentEditingSlot === (slot.id || `${slot.day}-${slot.period}`)}
-                                        onStartEditing={handleStartEditing}
-                                        onCancelEditing={handleCancelEditing}
-                                        displaySettings={displaySettings}
-                                        isCurrentPeriod={currentPeriod !== null && slot.day === getCurrentSchoolDay() && String(slot.period) === String(currentPeriod)}
-                                        editMode={editMode}
-                                        hasPracticeReminder={hasPracticeReminder(slot.day, slot.period)}
-                                        onTogglePracticeReminder={() => togglePracticeReminder(slot.day, slot.period, slot)}
-                                    />
-                                ))}
-                                
-                                {editMode && filterSlots(currentDay, period).length === 0 && (
-                                    <div className="add-time-slot">
-                                        <button 
-                                            onClick={() => {
-                                                const newSlot = {
-                                                    day: currentDay,
-                                                    period: period,
-                                                    startTime: period === '1' ? '8:35am' :
-                                                              period === '2' ? '9:40am' :
-                                                              period === 'Tutorial' ? '10:45am' :
-                                                              period === '3' ? '11:25am' :
-                                                              period === '4' ? '12:30pm' :
-                                                              period === '5' ? '2:25pm' : '3:35pm',
-                                                    endTime: period === '1' ? '9:35am' :
-                                                             period === '2' ? '10:40am' :
-                                                             period === 'Tutorial' ? '10:55am' :
-                                                             period === '3' ? '12:25pm' :
-                                                             period === '4' ? '1:30pm' :
-                                                             period === '5' ? '3:25pm' : '4:30pm',
-                                                    subject: '',
-                                                    code: '',
-                                                    room: '',
-                                                    teacher: ''
-                                                };
-                                                
-                                                timetableService.addTimeSlot(newSlot);
-                                                setTimeSlots([...timeSlots, newSlot]);
-                                            }}
-                                        >
-                                            + Add Class
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
+                <TimetableDaySelector
+                    days={SCHOOL_DAYS}
+                    currentDay={currentDay}
+                    getDayName={getDayName}
+                    onDayChange={handleDayChange}
+                />
+
+                <TimetableGrid
+                    periods={periods}
+                    currentDay={currentDay}
+                    currentEditingSlot={currentEditingSlot}
+                    filterSlots={filterSlots}
+                    getPeriodLabelRef={getPeriodLabelRef}
+                    editingRowRef={editingRowRef}
+                    onUpdateSlot={updateTimeSlot}
+                    onRemoveSlot={removeTimeSlot}
+                    onStartEditing={handleStartEditing}
+                    onCancelEditing={handleCancelEditing}
+                    displaySettings={displaySettings}
+                    currentPeriod={currentPeriod}
+                    currentSchoolDay={currentSchoolDay}
+                    editMode={editMode}
+                    hasPracticeReminder={hasPracticeReminder}
+                    onTogglePracticeReminder={togglePracticeReminder}
+                    onAddEmptySlot={addEmptySlotForPeriod}
+                    periodSchedule={PERIOD_SCHEDULE}
+                />
             
             {/* Admin Interfaces */}
             {showAdminTerminal && (
