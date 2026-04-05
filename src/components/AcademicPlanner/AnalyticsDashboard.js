@@ -257,6 +257,7 @@ const AnalyticsDashboard = ({ tasks, onClose }) => {
                             value={timeRange} 
                             onChange={(e) => setTimeRange(e.target.value)}
                             className="time-range-select"
+                            aria-label="Select analytics time range"
                         >
                             <option value="week">Past Week</option>
                             <option value="month">Past Month</option>

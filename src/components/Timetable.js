@@ -1490,6 +1490,7 @@ const Timetable = () => {
                             value={currentTemplate} 
                             onChange={(e) => loadTemplate(e.target.value)}
                             className="default-timetable-btn"
+                            aria-label="Choose a timetable template"
                         >
                             <option value="" disabled>Default Timetable</option>
                             {templates.map(template => (

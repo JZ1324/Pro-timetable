@@ -5,6 +5,8 @@ import { setAccentHue, getAccentHue, applyCustomTheme, setTheme } from '../servi
 const ThemeSwitcher = ({ onThemeChange, currentTheme }) => {
     const [accentHue, setHue] = useState(getAccentHue());
     const [contrastBoost, setContrastBoost] = useState(0);
+    const accentHueInputId = 'theme-accent-hue';
+    const contrastBoostInputId = 'theme-contrast-boost';
 
     useEffect(() => {
         setAccentHue(accentHue);
@@ -62,16 +64,18 @@ const themes = [
                 Current theme: <span>{currentTheme ? currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1) : 'Light'}</span>
             </div>
             <div className="accent-controls">
-                <label>Accent Hue: <strong>{accentHue}</strong></label>
+                <label htmlFor={accentHueInputId}>Accent Hue: <strong>{accentHue}</strong></label>
                 <input
+                    id={accentHueInputId}
                     type="range"
                     min="0"
                     max="359"
                     value={accentHue}
                     onChange={(e)=> setHue(Number(e.target.value))}
                 />
-                <label>Contrast Boost: <strong>{contrastBoost.toFixed(2)}</strong></label>
+                <label htmlFor={contrastBoostInputId}>Contrast Boost: <strong>{contrastBoost.toFixed(2)}</strong></label>
                 <input
+                    id={contrastBoostInputId}
                     type="range"
                     min="0"
                     max="1"

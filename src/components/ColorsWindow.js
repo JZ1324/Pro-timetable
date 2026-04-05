@@ -225,6 +225,7 @@ const ColorsWindow = () => {
                                             <select 
                                                 className="color-dropdown"
                                                 value={currentColor ? currentColor.value : ''}
+                                                aria-label={`Select colour for ${subject}`}
                                                 onChange={(e) => {
                                                     if (e.target.value === '') {
                                                         updateSubjectColor(subject, null);
