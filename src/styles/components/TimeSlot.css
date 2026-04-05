@@ -145,7 +145,7 @@
 .time-slot.current-period .teacher,
 .time-slot.current-period .code {
     font-weight: 500;
-    opacity: 0.9;
+    opacity: 1;
     transition: all 0.3s ease;
 }
 

@@ -787,19 +787,19 @@
 .time-slot p {
     margin: 0; /* remove extra space */
     font-size: 0.85rem; /* Smaller font size to match */
-    opacity: 0.9;
+    opacity: 1;
 }
 
 .time-slot .time {
     font-size: 0.8rem; /* Smaller font size */
-    opacity: 0.9;
+    opacity: 1;
 }
 
 .time-slot-actions button {
     background: none;
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
-    opacity: 0.9;
+    opacity: 1;
     cursor: pointer !important;
     padding: 4px 8px; /* Increased padding for better clickability */
     font-size: 0.8rem; /* Smaller font */
@@ -2140,4 +2140,3 @@
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
 }
-

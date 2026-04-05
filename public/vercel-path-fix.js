@@ -5,7 +5,7 @@
 
 (function() {
   // Debug helper with additional metadata
-  const DEBUG = true;
+  const DEBUG = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const log = function() {
     if (DEBUG && window.console) {
       const time = new Date().toISOString().split('T')[1].slice(0, -1);

@@ -25,6 +25,36 @@ class FirestoreTimetableService {
         return this.db.collection('timetables').doc(this.userId).collection('templates');
     }
 
+    sanitizeForFirestore(value) {
+        if (value === undefined) {
+            return undefined;
+        }
+
+        if (value === null || typeof value !== 'object') {
+            return value;
+        }
+
+        if (Array.isArray(value)) {
+            return value
+                .map((item) => this.sanitizeForFirestore(item))
+                .filter((item) => item !== undefined);
+        }
+
+        const isPlainObject = Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null;
+        if (!isPlainObject) {
+            return value;
+        }
+
+        const sanitized = {};
+        Object.entries(value).forEach(([key, nestedValue]) => {
+            const cleanedValue = this.sanitizeForFirestore(nestedValue);
+            if (cleanedValue !== undefined) {
+                sanitized[key] = cleanedValue;
+            }
+        });
+        return sanitized;
+    }
+
     /**
      * Save timetable data to Firestore
      */
@@ -33,8 +63,9 @@ class FirestoreTimetableService {
             console.log('💾 Saving timetable to Firestore...');
             
             const timetableRef = this.getUserTimetableRef();
+            const sanitizedTimeSlots = this.sanitizeForFirestore(timetableData.timeSlots || []);
             const dataToSave = {
-                timeSlots: timetableData.timeSlots || [],
+                timeSlots: sanitizedTimeSlots,
                 currentDay: timetableData.currentDay || 1,
                 lastModified: window.firebase.firestore.FieldValue.serverTimestamp(),
                 version: '1.0'
@@ -98,7 +129,7 @@ class FirestoreTimetableService {
             const templateRef = this.getUserTemplatesRef().doc(templateName);
             const dataToSave = {
                 name: templateName,
-                timeSlots: templateData,
+                timeSlots: this.sanitizeForFirestore(templateData),
                 createdAt: window.firebase.firestore.FieldValue.serverTimestamp(),
                 lastModified: window.firebase.firestore.FieldValue.serverTimestamp()
             };
@@ -163,14 +194,15 @@ class FirestoreTimetableService {
             console.log('🔄 Updating time slots in Firestore...');
             
             const timetableRef = this.getUserTimetableRef();
+            const sanitizedTimeSlots = this.sanitizeForFirestore(timeSlots);
             await timetableRef.update({
-                timeSlots: timeSlots,
+                timeSlots: sanitizedTimeSlots,
                 lastModified: window.firebase.firestore.FieldValue.serverTimestamp()
             });
 
             // Update cache
             const cached = this.cache.get('timetable') || {};
-            cached.timeSlots = timeSlots;
+            cached.timeSlots = sanitizedTimeSlots;
             cached.lastModified = new Date();
             this.cache.set('timetable', cached);
             

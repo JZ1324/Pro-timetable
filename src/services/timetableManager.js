@@ -26,7 +26,7 @@ export class TimetableManager {
             try {
                 await this.firestoreService.saveTimetable(timetableData);
                 // Also save locally as backup
-                this.localService.saveTimetableToLocalStorage(timetableData);
+                this.saveToLocalStorage(timetableData);
                 return true;
             } catch (error) {
                 console.warn('Firestore save failed, falling back to localStorage:', error);

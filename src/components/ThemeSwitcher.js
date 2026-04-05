@@ -44,7 +44,7 @@ const themes = [
 
     return (
         <div className="theme-switcher-container">
-            <h3 className="theme-switcher-title">Select a Theme</h3>
+            <h2 className="theme-switcher-title">Select a Theme</h2>
             <div className="theme-buttons">
                 {themes.map(theme => (
                     <button 

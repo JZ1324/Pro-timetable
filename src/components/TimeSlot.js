@@ -246,9 +246,27 @@ const TimeSlot = ({
     };
 
     // Get appropriate text color based on background
-    const getTextColor = () => {
-        // Always use white text for consistent appearance
-        return '#ffffff';
+    const getTextColor = (backgroundColor) => {
+        if (!backgroundColor || typeof backgroundColor !== 'string') {
+            return '#111827';
+        }
+
+        const hex = backgroundColor.replace('#', '').trim();
+        if (!/^[0-9a-f]{3}([0-9a-f]{3})?$/i.test(hex)) {
+            return '#111827';
+        }
+
+        const normalizedHex = hex.length === 3
+            ? hex.split('').map((char) => char + char).join('')
+            : hex;
+
+        const rgbValues = normalizedHex.match(/.{2}/g).map((value) => parseInt(value, 16) / 255);
+        const [r, g, b] = rgbValues.map((value) => (
+            value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+        ));
+        const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+        return luminance > 0.45 ? '#111827' : '#ffffff';
     };
 
     // View mode
@@ -257,12 +275,28 @@ const TimeSlot = ({
         let subjectName = slot.subject || 'Unnamed Class';
         if (subjectName.trim().toUpperCase() === 'PST') {
             subjectName = 'Private Study';
-        }                return (
+        }
+
+        const subjectColor = getSubjectColor();
+        const textColor = getTextColor(subjectColor);
+        const buttonStyle = textColor === '#ffffff'
+            ? {
+                color: textColor,
+                borderColor: 'rgba(255, 255, 255, 0.6)',
+                backgroundColor: 'rgba(255, 255, 255, 0.12)'
+            }
+            : {
+                color: textColor,
+                borderColor: 'rgba(17, 24, 39, 0.28)',
+                backgroundColor: 'rgba(255, 255, 255, 0.45)'
+            };
+
+        return (
             <div 
                 className={`time-slot ${isCurrentPeriod ? 'current-period' : ''} ${hasPracticeReminder ? 'has-practice-reminder' : ''}`}
                 style={{
-                    backgroundColor: getSubjectColor(),
-                    color: getTextColor(),
+                    backgroundColor: subjectColor,
+                    color: textColor,
                     cursor: 'pointer'
                 }}
                 ref={timeSlotRef}
@@ -288,7 +322,9 @@ const TimeSlot = ({
                                 }} 
                                 className={`practice-button ${hasPracticeReminder ? 'active' : ''}`}
                                 type="button"
+                                aria-label={hasPracticeReminder ? `Disable practice reminder for ${subjectName}` : `Enable practice reminder for ${subjectName}`}
                                 title={hasPracticeReminder ? 'Practice reminder enabled - Click to disable' : 'Click to enable practice reminder'}
+                                style={hasPracticeReminder ? undefined : buttonStyle}
                             >
                                 Prac
                             </button>
@@ -301,6 +337,8 @@ const TimeSlot = ({
                             }} 
                             className="edit-button"
                             type="button"
+                            aria-label={`Edit ${subjectName}`}
+                            style={buttonStyle}
                         >
                             Edit
                         </button>
@@ -312,6 +350,8 @@ const TimeSlot = ({
                             }} 
                             className="delete-button"
                             type="button"
+                            aria-label={`Delete ${subjectName}`}
+                            style={buttonStyle}
                         >
                             ×
                         </button>
@@ -334,8 +374,9 @@ const TimeSlot = ({
             </div>
             <div className="time-slot-edit-form">
                 <div className="form-group">
-                    <label>Subject: {editedSlot.subject?.trim().toUpperCase() === 'PST' && <span style={{fontSize: '0.8em', color: '#ff5e3a'}}>(PST will display as "Private Study")</span>}</label>
+                    <label htmlFor={`subject-${slot.id || `${slot.day}-${slot.period}`}`}>Subject: {editedSlot.subject?.trim().toUpperCase() === 'PST' && <span style={{fontSize: '0.8em', color: '#ff5e3a'}}>(PST will display as "Private Study")</span>}</label>
                     <input 
+                        id={`subject-${slot.id || `${slot.day}-${slot.period}`}`}
                         type="text" 
                         name="subject" 
                         value={editedSlot.subject || ''} 
@@ -345,8 +386,9 @@ const TimeSlot = ({
                     />
                 </div>
                 <div className="form-group">
-                    <label>Code:</label>
+                    <label htmlFor={`code-${slot.id || `${slot.day}-${slot.period}`}`}>Code:</label>
                     <input 
+                        id={`code-${slot.id || `${slot.day}-${slot.period}`}`}
                         type="text" 
                         name="code" 
                         value={editedSlot.code || ''} 
@@ -355,8 +397,9 @@ const TimeSlot = ({
                     />
                 </div>
                 <div className="form-group">
-                    <label>Start Time:</label>
+                    <label htmlFor={`start-time-${slot.id || `${slot.day}-${slot.period}`}`}>Start Time:</label>
                     <input 
+                        id={`start-time-${slot.id || `${slot.day}-${slot.period}`}`}
                         type="text" 
                         name="startTime" 
                         value={editedSlot.startTime || ''} 
@@ -365,8 +408,9 @@ const TimeSlot = ({
                     />
                 </div>
                 <div className="form-group">
-                    <label>End Time:</label>
+                    <label htmlFor={`end-time-${slot.id || `${slot.day}-${slot.period}`}`}>End Time:</label>
                     <input 
+                        id={`end-time-${slot.id || `${slot.day}-${slot.period}`}`}
                         type="text" 
                         name="endTime" 
                         value={editedSlot.endTime || ''} 
@@ -375,8 +419,9 @@ const TimeSlot = ({
                     />
                 </div>
                 <div className="form-group">
-                    <label>Room:</label>
+                    <label htmlFor={`room-${slot.id || `${slot.day}-${slot.period}`}`}>Room:</label>
                     <input 
+                        id={`room-${slot.id || `${slot.day}-${slot.period}`}`}
                         type="text" 
                         name="room" 
                         value={editedSlot.room || ''} 
@@ -385,8 +430,9 @@ const TimeSlot = ({
                     />
                 </div>
                 <div className="form-group">
-                    <label>Teacher:</label>
+                    <label htmlFor={`teacher-${slot.id || `${slot.day}-${slot.period}`}`}>Teacher:</label>
                     <input 
+                        id={`teacher-${slot.id || `${slot.day}-${slot.period}`}`}
                         type="text" 
                         name="teacher" 
                         value={editedSlot.teacher || ''} 

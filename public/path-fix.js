@@ -7,7 +7,7 @@
 // Run immediately to fix any script tags before they're executed
 (function() {
   // Debug helper for logging
-  const DEBUG = true;
+  const DEBUG = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const log = function() {
     if (DEBUG && window.console) {
       console.log.apply(console, ['[PathFix]'].concat(Array.from(arguments)));
