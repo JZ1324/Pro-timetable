@@ -37,8 +37,6 @@ import '../styles/components/PracticeReminderPopup.css';
 
 const Timetable = () => {
     const { user } = useAuth();
-    const timetableRef = useRef(null);
-    const dayButtonsRef = useRef([]);
     
     // Use shared sync status hook
     const { isFirestoreReady, firestoreService, timetableManager } = useSyncStatus();
@@ -85,7 +83,6 @@ const Timetable = () => {
         Lunch: false
     });
     const [showColorLegend, setShowColorLegend] = useState(false);
-    const [editingRowHeight, setEditingRowHeight] = useState(null);
     const [practiceReminders, setPracticeReminders] = useState({});
     const [activePracticePopups, setActivePracticePopups] = useState([]);
     const [showPracticeReminderSettings, setShowPracticeReminderSettings] = useState(false);
@@ -354,8 +351,6 @@ const Timetable = () => {
         permissionGranted: false,
         timeMinutes: 15
     });
-    const editingRowRef = useRef(null);
-    const labelRefs = useRef({});
     const notificationIntervalRef = useRef(null);
 
     // Get all days from 1 to 10
@@ -375,8 +370,7 @@ const Timetable = () => {
     const handleDayChange = (event, day) => {
         event.preventDefault();
         event.stopPropagation();
-        
-        console.log("Switching to day:", day);
+
         setCurrentDay(day);
         // Save the current day to localStorage
         saveCurrentTimetableDay(day);
@@ -665,16 +659,6 @@ const Timetable = () => {
         
         checkAdminStatus();
     }, [user]);
-
-    useEffect(() => {
-        if (currentEditingSlot && editingRowRef.current) {
-            // Get the height of the row being edited
-            const height = editingRowRef.current.clientHeight;
-            setEditingRowHeight(height);
-        } else {
-            setEditingRowHeight(null);
-        }
-    }, [currentEditingSlot]);
 
     const loadTemplate = (templateName) => {
         timetableService.loadTemplate(templateName);
@@ -1259,7 +1243,6 @@ const Timetable = () => {
 
     // Handle when a user starts editing a slot
     const handleStartEditing = (id) => {
-        console.log('Starting edit for slot:', id);
         // Enable edit mode if not already enabled
         if (!editMode) {
             setEditMode(true);
@@ -1269,7 +1252,6 @@ const Timetable = () => {
     
     // Handle when a user cancels editing
     const handleCancelEditing = () => {
-        console.log('Canceling edit');
         setCurrentEditingSlot(null);
     };
 
@@ -1299,82 +1281,6 @@ const Timetable = () => {
             String(slot.period) === String(period)
         );
     };
-
-    // Store a reference to each period's corresponding label
-    const getPeriodLabelRef = (period) => {
-        if (!labelRefs.current[period]) {
-            labelRefs.current[period] = React.createRef();
-        }
-        return labelRefs.current[period];
-    };
-
-    // Keep left period labels aligned in height with right rows
-    useEffect(() => {
-        const periods = getPeriods();
-        const syncHeights = () => {
-            periods.forEach(p => {
-                const labelEl = labelRefs.current[p]?.current;
-                const rowEl = document.querySelector(`.day-column .period-row[data-period="${p}"]`);
-                if (!labelEl || !rowEl) return;
-                // Reset to auto first to measure natural heights
-                labelEl.style.height = 'auto';
-                rowEl.style.height = 'auto';
-                const labelMin = parseFloat(getComputedStyle(labelEl).minHeight || '0');
-                const rowMin = parseFloat(getComputedStyle(rowEl).minHeight || '0');
-                const labelH = Math.max(labelEl.scrollHeight || 0, labelEl.offsetHeight || 0);
-                const rowH = Math.max(rowEl.scrollHeight || 0, rowEl.offsetHeight || 0);
-                const target = Math.max(labelH, rowH, labelMin, rowMin);
-                labelEl.style.height = `${target}px`;
-                rowEl.style.height = `${target}px`;
-            });
-        };
-
-        // Throttle reflows with rAF to avoid ResizeObserver loops
-        let rafId = null;
-        let pending = false;
-        const scheduleSync = () => {
-            if (pending) return;
-            pending = true;
-            rafId = requestAnimationFrame(() => {
-                pending = false;
-                syncHeights();
-            });
-        };
-
-        // Run after paint with a second pass for animation settle
-        const raf = requestAnimationFrame(() => {
-            scheduleSync();
-            setTimeout(scheduleSync, 200);
-        });
-        // Resize observer to react to content changes
-        const ro = new ResizeObserver(() => {
-            scheduleSync();
-        });
-        periods.forEach(p => {
-            const rowEl = document.querySelector(`.day-column .period-row[data-period="${p}"]`);
-            if (rowEl) {
-                ro.observe(rowEl);
-                const editEl = rowEl.querySelector('.time-slot.editing');
-                if (editEl) ro.observe(editEl);
-            }
-        });
-        const resizeHandler = () => scheduleSync();
-        window.addEventListener('resize', resizeHandler);
-
-        return () => {
-            cancelAnimationFrame(raf);
-            if (rafId) cancelAnimationFrame(rafId);
-            try { ro.disconnect(); } catch {}
-            window.removeEventListener('resize', resizeHandler);
-            // Cleanup explicit heights to allow CSS to control
-            periods.forEach(p => {
-                const labelEl = labelRefs.current[p]?.current;
-                const rowEl = document.querySelector(`.day-column .period-row[data-period="${p}"]`);
-                if (labelEl) labelEl.style.height = '';
-                if (rowEl) rowEl.style.height = '';
-            });
-        };
-    }, [timeSlots, currentDay, editMode, visiblePeriods.Recess, visiblePeriods.Lunch, currentEditingSlot]);
 
     // Listen for color changes
     useEffect(() => {
@@ -1448,6 +1354,41 @@ const Timetable = () => {
             return () => clearTimeout(timeoutId);
         }
     }, [timeSlots, isFirestoreReady]);
+
+    const getPeriodTimeRange = (period) => {
+        const periodTimes = {
+            '1': '8:35am–9:35am',
+            '2': '9:40am–10:40am',
+            'Tutorial': '10:45am–10:55am',
+            'Recess': '10:55am–11:25am',
+            '3': '11:25am–12:25pm',
+            '4': '12:30pm–1:30pm',
+            'Lunch': '1:30pm–2:25pm',
+            '5': '2:25pm–3:25pm',
+            'After School': '3:35pm–4:30pm'
+        };
+
+        return periodTimes[period] || '';
+    };
+
+    const getPeriodTitle = (period) => {
+        if (['Tutorial', 'Recess', 'Lunch', 'After School'].includes(period)) {
+            return period;
+        }
+
+        return `Period ${period}`;
+    };
+
+    const currentDaySlots = timeSlots.filter((slot) => slot.day === currentDay);
+    const classCount = currentDaySlots.filter(
+        (slot) => slot.subject && !slot.isBreakPeriod && !['Recess', 'Lunch'].includes(slot.subject)
+    ).length;
+    const reminderCount = currentDaySlots.filter((slot) => hasPracticeReminder(slot.day, slot.period)).length;
+    const activePeriodLabel = currentPeriod ? getPeriodTitle(String(currentPeriod)) : 'No live class';
+    const activePeriodTime = currentPeriod ? getPeriodTimeRange(String(currentPeriod)) : 'Outside scheduled periods';
+    const currentTemplateLabel = currentTemplate
+        ? currentTemplate.charAt(0).toUpperCase() + currentTemplate.slice(1)
+        : 'Default timetable';
     
     return (
         <MobileDetector
@@ -1459,235 +1400,251 @@ const Timetable = () => {
             editMode={editMode}
         >
             <div className="timetable-container">
-            <div className="timetable-header">
-                <div className="header-main">
-                    <h2>School Timetable</h2>
-                    {isAdminUser && (
-                        <div className="admin-controls header-admin">
-                            <button 
-                                className="admin-button-header" 
-                                onClick={() => setShowAdminDashboard(true)}
-                                title="Open Admin Dashboard"
+                <div className="timetable-header">
+                    <div className="header-main">
+                        <div className="timetable-heading">
+                            <p className="timetable-eyebrow">Weekly planner</p>
+                            <h2>School Timetable</h2>
+                            <p className="timetable-description">
+                                A cleaner day view built around what matters right now: the current day,
+                                the active period, and quick editing without the cramped old grid.
+                            </p>
+                        </div>
+                        {isAdminUser && (
+                            <div className="admin-controls header-admin">
+                                <button 
+                                    className="admin-button-header" 
+                                    onClick={() => setShowAdminDashboard(true)}
+                                    title="Open Admin Dashboard"
+                                >
+                                    🛠️
+                                </button>
+                                <button 
+                                    className="admin-button-header terminal" 
+                                    onClick={() => setShowAdminTerminal(true)}
+                                    title="Open Admin Terminal"
+                                >
+                                    💻
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="timetable-overview">
+                        <div className="timetable-heading">
+                            <div className="current-day-display">
+                                <span>{getDayName(currentDay)}</span>
+                            </div>
+                        </div>
+                        <div className="timetable-summary-grid">
+                            <div className="timetable-summary-card">
+                                <span className="timetable-summary-label">Today&apos;s classes</span>
+                                <span className="timetable-summary-value">{classCount}</span>
+                                <span className="timetable-summary-meta">
+                                    {classCount === 1 ? '1 scheduled class today' : `${classCount} scheduled classes today`}
+                                </span>
+                            </div>
+                            <div className="timetable-summary-card">
+                                <span className="timetable-summary-label">Live now</span>
+                                <span className="timetable-summary-value">{activePeriodLabel}</span>
+                                <span className="timetable-summary-meta">{activePeriodTime}</span>
+                            </div>
+                            <div className="timetable-summary-card">
+                                <span className="timetable-summary-label">Current template</span>
+                                <span className="timetable-summary-value">{currentTemplateLabel}</span>
+                                <span className="timetable-summary-meta">
+                                    {editMode ? 'Edit mode is on' : 'View mode is on'}
+                                </span>
+                            </div>
+                            <div className="timetable-summary-card">
+                                <span className="timetable-summary-label">Practice reminders</span>
+                                <span className="timetable-summary-value">{reminderCount}</span>
+                                <span className="timetable-summary-meta">
+                                    {reminderCount === 0 ? 'No reminders on this day yet' : `${reminderCount} reminder${reminderCount === 1 ? '' : 's'} active`}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="template-controls">
+                        <div className="default-timetable-dropdown-container">
+                            <select 
+                                value={currentTemplate} 
+                                onChange={(e) => loadTemplate(e.target.value)}
+                                className="default-timetable-btn"
+                                aria-label="Choose a timetable template"
                             >
-                                🛠️
+                                <option value="" disabled>Default Timetable</option>
+                                {templates.map(template => (
+                                    <option key={template} value={template}>
+                                        {template.charAt(0).toUpperCase() + template.slice(1)}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {currentTemplate && currentTemplate !== 'school' && (
+                            <button 
+                                className="delete-template-btn" 
+                                onClick={() => deleteTemplate(currentTemplate)}
+                            >
+                                Delete
                             </button>
+                        )}
+
+                        <div className="save-template">
                             <button 
-                                className="admin-button-header terminal" 
-                                onClick={() => setShowAdminTerminal(true)}
-                                title="Open Admin Terminal"
+                                className="save-template-btn"
+                                onClick={saveTemplate}
                             >
-                                💻
+                                Save Template
                             </button>
                         </div>
-                    )}
-                </div>
-                <div className="current-day-display">
-                    <span>{getDayName(currentDay)}</span>
-                </div>
-                
-                <div className="template-controls">
-                    <div className="default-timetable-dropdown-container">
-                        <select 
-                            value={currentTemplate} 
-                            onChange={(e) => loadTemplate(e.target.value)}
-                            className="default-timetable-btn"
-                            aria-label="Choose a timetable template"
-                        >
-                            <option value="" disabled>Default Timetable</option>
-                            {templates.map(template => (
-                                <option key={template} value={template}>
-                                    {template.charAt(0).toUpperCase() + template.slice(1)}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    
-                    {currentTemplate && currentTemplate !== 'school' && (
-                        <button 
-                            className="delete-template-btn" 
-                            onClick={() => deleteTemplate(currentTemplate)}
-                        >
-                            Delete
-                        </button>
-                    )}
-                    
-                    <div className="save-template">
-                        <button 
-                            className="save-template-btn"
-                            onClick={saveTemplate}
-                        >
-                            Save Template
-                        </button>
-                    </div>
-                    
-                    <button 
-                        className={`edit-mode-toggle ${editMode ? 'active' : ''}`}
-                        onClick={() => {
-                            setEditMode(!editMode);
-                            // Close any open editing form when toggling edit mode
-                            setCurrentEditingSlot(null);
-                        }}
-                    >
-                        {editMode ? 'View Mode' : 'Edit Mode'}
-                    </button>
-                    
-                    <button 
-                        className="color-legend-btn"
-                        onClick={() => openColorsWindow()}
-                    >
-                        Colours
-                    </button>
-                    
-                    <ImportButton onImport={importTimetable} />
-                </div>
-                
-                {editMode && (
-                    <div className="edit-mode-hint">
-                        <p>Click directly on any class to edit its details, or use the <span className="edit-button-hint">Edit</span> button</p>
-                    </div>
-                )}
-                
-                <div className="day-selector">
-                    {days.map(day => {
-                        // Get today's real school day number
-                        const todayDay = getCurrentSchoolDay();
-                        const isToday = day === todayDay;
-                        
-                        // Check if it's a weekend
-                        const today = new Date();
-                        
-                        const dayOfWeek = today.getDay(); // 0 = Sunday, 6 = Saturday
-                        const isSaturday = dayOfWeek === 6;
-                        const isSunday = dayOfWeek === 0;
-                        
-                        // Helper function to get appropriate hover text
-                        const getHoverText = () => {
-                            if (!isToday) return null;
-                            if (isSaturday) return "2 days";
-                            if (isSunday) return "1 day";
-                            return "Today";
-                        };
-                        
-                        // Determine the title for the button
-                        let titleText = getDayName(day);
-                        if (isToday) {
-                            const hoverText = getHoverText();
-                            titleText += ` (${hoverText})`;
-                        }
-                        
-                        return (
-                            <button 
-                                key={day} 
-                                type="button"
-                                className={`day-button ${currentDay === day ? 'active' : ''} ${isToday ? 'current-day' : ''}`}
-                                onClick={(e) => handleDayChange(e, day)}
-                                title={titleText}
-                            >
-                                <span>Day {day}</span>
-                                {isToday && <span className="today-text">{getHoverText()}</span>}
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
 
-            <div className="timetable">
-                <div className="periods-column">
+                        <button 
+                            className={`edit-mode-toggle ${editMode ? 'active' : ''}`}
+                            onClick={() => {
+                                setEditMode(!editMode);
+                                setCurrentEditingSlot(null);
+                            }}
+                        >
+                            {editMode ? 'View Mode' : 'Edit Mode'}
+                        </button>
+
+                        <button 
+                            className="color-legend-btn"
+                            onClick={() => openColorsWindow()}
+                        >
+                            Colours
+                        </button>
+
+                        <ImportButton onImport={importTimetable} />
+                    </div>
+
+                    {editMode && (
+                        <div className="edit-mode-hint">
+                            <p>Click directly on any class to edit its details, or use the <span className="edit-button-hint">Edit</span> button</p>
+                        </div>
+                    )}
+
+                    <div className="day-selector">
+                        {days.map(day => {
+                            const todayDay = getCurrentSchoolDay();
+                            const isToday = day === todayDay;
+                            const today = new Date();
+                            const dayOfWeek = today.getDay();
+                            const isSaturday = dayOfWeek === 6;
+                            const isSunday = dayOfWeek === 0;
+
+                            const getHoverText = () => {
+                                if (!isToday) return null;
+                                if (isSaturday) return '2 days';
+                                if (isSunday) return '1 day';
+                                return 'Today';
+                            };
+
+                            let titleText = getDayName(day);
+                            if (isToday) {
+                                const hoverText = getHoverText();
+                                titleText += ` (${hoverText})`;
+                            }
+
+                            return (
+                                <button 
+                                    key={day} 
+                                    type="button"
+                                    className={`day-button ${currentDay === day ? 'active' : ''} ${isToday ? 'current-day' : ''}`}
+                                    onClick={(e) => handleDayChange(e, day)}
+                                    title={titleText}
+                                >
+                                    <span>Day {day}</span>
+                                    {isToday && <span className="today-text">{getHoverText()}</span>}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                <div className="timetable day-column">
                     {getPeriods().map(period => {
-                        const isEditingThisPeriod = filterSlots(currentDay, period).some(
+                        const slotsForPeriod = filterSlots(currentDay, period);
+                        const isEditingThisPeriod = slotsForPeriod.some(
                             slot => currentEditingSlot === (slot.id || `${slot.day}-${slot.period}`)
                         );
-                        
+                        const isBreakPeriod = period === 'Recess' || period === 'Lunch';
+
                         return (
-                            <div 
-                                key={period} 
-                                className={`period-label ${isEditingThisPeriod ? 'editing' : ''}`}
-                                data-period={period}
-                                ref={getPeriodLabelRef(period)}
+                            <section
+                                key={period}
+                                className={`period-section ${isBreakPeriod ? 'break-period-section' : ''}`}
                             >
-                                <span>{period}</span>
-                                {period === '1' && <span className="time">8:35am–9:35am</span>}
-                                {period === '2' && <span className="time">9:40am–10:40am</span>}
-                                {period === 'Tutorial' && <span className="time">10:45am–10:55am</span>}
-                                {period === 'Recess' && <span className="time">10:55am–11:25am</span>}
-                                {period === '3' && <span className="time">11:25am–12:25pm</span>}
-                                {period === '4' && <span className="time">12:30pm–1:30pm</span>}
-                                {period === 'Lunch' && <span className="time">1:30pm–2:25pm</span>}
-                                {period === '5' && <span className="time">2:25pm–3:25pm</span>}
-                                {period === 'After School' && <span className="time">3:35pm–4:30pm</span>}
-                            </div>
+                                <div 
+                                    className={`period-label ${isEditingThisPeriod ? 'editing' : ''}`}
+                                    data-period={period}
+                                >
+                                    <span>{getPeriodTitle(period)}</span>
+                                    <span className="time">{getPeriodTimeRange(period)}</span>
+                                </div>
+
+                                <div 
+                                    className={`period-row ${isEditingThisPeriod ? 'has-editing-slot' : ''}`}
+                                    data-period={period}
+                                >
+                                    {slotsForPeriod.map(slot => (
+                                        <TimeSlot
+                                            key={slot.id || `${slot.day}-${slot.period}`}
+                                            slot={slot}
+                                            onUpdate={updateTimeSlot}
+                                            onRemove={removeTimeSlot}
+                                            isEditing={currentEditingSlot === (slot.id || `${slot.day}-${slot.period}`)}
+                                            onStartEditing={handleStartEditing}
+                                            onCancelEditing={handleCancelEditing}
+                                            displaySettings={displaySettings}
+                                            isCurrentPeriod={currentPeriod !== null && slot.day === getCurrentSchoolDay() && String(slot.period) === String(currentPeriod)}
+                                            editMode={editMode}
+                                            hasPracticeReminder={hasPracticeReminder(slot.day, slot.period)}
+                                            onTogglePracticeReminder={() => togglePracticeReminder(slot.day, slot.period, slot)}
+                                        />
+                                    ))}
+
+                                    {editMode && slotsForPeriod.length === 0 && (
+                                        <div className="add-time-slot">
+                                            <button 
+                                                onClick={() => {
+                                                    const newSlot = {
+                                                        day: currentDay,
+                                                        period: period,
+                                                        startTime: period === '1' ? '8:35am' :
+                                                                  period === '2' ? '9:40am' :
+                                                                  period === 'Tutorial' ? '10:45am' :
+                                                                  period === '3' ? '11:25am' :
+                                                                  period === '4' ? '12:30pm' :
+                                                                  period === '5' ? '2:25pm' : '3:35pm',
+                                                        endTime: period === '1' ? '9:35am' :
+                                                                 period === '2' ? '10:40am' :
+                                                                 period === 'Tutorial' ? '10:55am' :
+                                                                 period === '3' ? '12:25pm' :
+                                                                 period === '4' ? '1:30pm' :
+                                                                 period === '5' ? '3:25pm' : '4:30pm',
+                                                        subject: '',
+                                                        code: '',
+                                                        room: '',
+                                                        teacher: ''
+                                                    };
+
+                                                    timetableService.addTimeSlot(newSlot);
+                                                    setTimeSlots([...timeSlots, newSlot]);
+                                                }}
+                                            >
+                                                + Add Class
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
                         );
                     })}
                 </div>
-                
-                <div className="day-column">
-                    {getPeriods().map(period => {
-                        const isEditingThisPeriod = filterSlots(currentDay, period).some(
-                            slot => currentEditingSlot === (slot.id || `${slot.day}-${slot.period}`)
-                        );
-                        
-                        return (
-                            <div 
-                                key={period} 
-                                className={`period-row ${isEditingThisPeriod ? 'has-editing-slot' : ''}`}
-                                data-period={period}
-                                ref={isEditingThisPeriod ? editingRowRef : null}
-                            >
-                                {filterSlots(currentDay, period).map(slot => (
-                                    <TimeSlot
-                                        key={slot.id || `${slot.day}-${slot.period}`}
-                                        slot={slot}
-                                        onUpdate={updateTimeSlot}
-                                        onRemove={removeTimeSlot}
-                                        isEditing={currentEditingSlot === (slot.id || `${slot.day}-${slot.period}`)}
-                                        onStartEditing={handleStartEditing}
-                                        onCancelEditing={handleCancelEditing}
-                                        displaySettings={displaySettings}
-                                        isCurrentPeriod={currentPeriod !== null && slot.day === getCurrentSchoolDay() && String(slot.period) === String(currentPeriod)}
-                                        editMode={editMode}
-                                        hasPracticeReminder={hasPracticeReminder(slot.day, slot.period)}
-                                        onTogglePracticeReminder={() => togglePracticeReminder(slot.day, slot.period, slot)}
-                                    />
-                                ))}
-                                
-                                {editMode && filterSlots(currentDay, period).length === 0 && (
-                                    <div className="add-time-slot">
-                                        <button 
-                                            onClick={() => {
-                                                const newSlot = {
-                                                    day: currentDay,
-                                                    period: period,
-                                                    startTime: period === '1' ? '8:35am' :
-                                                              period === '2' ? '9:40am' :
-                                                              period === 'Tutorial' ? '10:45am' :
-                                                              period === '3' ? '11:25am' :
-                                                              period === '4' ? '12:30pm' :
-                                                              period === '5' ? '2:25pm' : '3:35pm',
-                                                    endTime: period === '1' ? '9:35am' :
-                                                             period === '2' ? '10:40am' :
-                                                             period === 'Tutorial' ? '10:55am' :
-                                                             period === '3' ? '12:25pm' :
-                                                             period === '4' ? '1:30pm' :
-                                                             period === '5' ? '3:25pm' : '4:30pm',
-                                                    subject: '',
-                                                    code: '',
-                                                    room: '',
-                                                    teacher: ''
-                                                };
-                                                
-                                                timetableService.addTimeSlot(newSlot);
-                                                setTimeSlots([...timeSlots, newSlot]);
-                                            }}
-                                        >
-                                            + Add Class
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
             
             {/* Admin Interfaces */}
             {showAdminTerminal && (

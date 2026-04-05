@@ -1,2142 +1,740 @@
-/* Timetable Component Styles */
+/* Timetable surface */
 .timetable-container {
-    background-color: var(--bg-secondary);
-    border-radius: 16px;
-    padding: 25px; /* Reduced padding for better proportion */
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-    transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
     width: 100%;
-    max-width: 1100px; /* Set to requested 1000px max width */
-    min-width: 800px; /* Reasonable minimum width */
-    margin: 0 auto; /* Center the container */
-    animation: fadeInUp 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-    transform-origin: center;
-    margin-top: 5px; /* Reduced from 10px */
-    margin-bottom: 20px; /* Reduced from 50px */
-    max-height: none !important; /* Prevent height limitations */
-    height: auto !important; /* Only take up space needed */
+    max-width: 1280px;
+    margin: 0 auto 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
     overflow: visible;
 }
 
 .timetable-header {
-    margin-bottom: 25px;
-    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-    width: 100%;
     position: relative;
+    overflow: hidden;
+    padding: 28px;
+    border: 1px solid color-mix(in srgb, var(--border-color) 78%, transparent);
+    border-radius: 28px;
+    background:
+        radial-gradient(circle at top right, color-mix(in srgb, var(--accent-color) 18%, transparent) 0, transparent 38%),
+        linear-gradient(135deg, color-mix(in srgb, var(--bg-secondary) 96%, white 4%) 0%, color-mix(in srgb, var(--bg-primary) 92%, var(--accent-color) 8%) 100%);
+    box-shadow: 0 22px 50px rgba(15, 23, 42, 0.08);
+}
+
+.timetable-header::after {
+    content: '';
+    position: absolute;
+    inset: auto -100px -140px auto;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent-color) 10%, transparent);
+    filter: blur(10px);
+    pointer-events: none;
+}
+
+.header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
+}
+
+.timetable-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.timetable-eyebrow {
+    margin: 0;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: color-mix(in srgb, var(--accent-color) 72%, var(--text-secondary) 28%);
 }
 
 .timetable-header h2 {
-    font-size: 1.9rem;
-    font-weight: 700;
-    margin-bottom: 15px;
+    margin: 0;
+    font-size: clamp(2rem, 3vw, 2.8rem);
+    line-height: 1;
     color: var(--text-primary);
-    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.timetable-description {
+    max-width: 60ch;
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.98rem;
+    line-height: 1.6;
+}
+
+.admin-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.admin-button-header {
+    background: rgba(238, 65, 26, 0.1) !important;
+    color: #ee411a !important;
+    border: 2px solid #ee411a !important;
+    border-radius: 999px !important;
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 1.2rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+}
+
+.admin-button-header:hover {
+    background: #ee411a !important;
+    color: white !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 14px 26px rgba(238, 65, 26, 0.25) !important;
+}
+
+.admin-button-header.terminal {
+    color: #2c3e50 !important;
+    border-color: #2c3e50 !important;
+    background: rgba(44, 62, 80, 0.08) !important;
+}
+
+.admin-button-header.terminal:hover {
+    background: #2c3e50 !important;
+    color: white !important;
+    box-shadow: 0 14px 26px rgba(44, 62, 80, 0.24) !important;
+}
+
+.timetable-overview {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr);
+    gap: 24px;
+    align-items: stretch;
     position: relative;
+    z-index: 1;
 }
 
-.main-container.sidebar-collapsed .timetable-header h2 {
-    text-align: center;
+.timetable-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
 }
 
-.main-container.sidebar-collapsed .current-day-display {
-    text-align: center;
-    margin: 10px auto;
+.timetable-summary-card {
+    padding: 18px;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--bg-secondary) 88%, white 12%);
+    border: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 118px;
 }
 
-.main-container.sidebar-collapsed .template-controls {
-    justify-content: center;
+.timetable-summary-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-secondary);
 }
 
-.main-container.sidebar-collapsed .day-selector {
-    justify-content: center;
+.timetable-summary-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1.15;
+    color: var(--text-primary);
 }
 
-/* Template Controls */
+.timetable-summary-meta {
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+    line-height: 1.45;
+}
+
+.current-day-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    align-self: flex-start;
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent-color) 12%, white 88%);
+    color: var(--accent-color);
+    border: 1px solid color-mix(in srgb, var(--accent-color) 28%, transparent);
+    font-weight: 700;
+}
+
+.current-day-display span {
+    color: inherit;
+}
+
 .template-controls {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 15px;
     align-items: center;
-    row-gap: 15px;
+    gap: 12px;
+    row-gap: 14px;
+    margin-top: 24px;
+    position: relative;
+    z-index: 1;
 }
 
-/* Media queries for smaller screens */
-@media (max-width: 600px) {
-    .template-controls {
-        justify-content: center;
-        gap: 8px;
-    }
-    
-    .template-controls button, 
-    .template-controls select, 
-    .template-controls input,
-    .default-timetable-dropdown,
-    .import-button {
-        font-size: 0.8rem;
-        padding: 5px 8px;
-    }
+.template-controls button,
+.template-controls select,
+.template-controls input {
+    min-height: 42px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+    font-size: 0.92rem;
+    font-weight: 600;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, background-color 0.22s ease, border-color 0.22s ease;
 }
 
 .template-controls select,
 .template-controls input {
-    padding: 6px 8px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-primary);
+    min-width: 180px;
+    padding: 0 14px;
+    background: color-mix(in srgb, var(--bg-secondary) 90%, white 10%);
     color: var(--text-primary);
-    font-size: 0.85rem;
-    width: auto;
-    min-width: 120px;
-    max-width: 150px;
-}
-
-.default-timetable-btn {
-    padding: 6px 12px;
-    min-height: 32px;
-    border-radius: 8px;
-    background: linear-gradient(to bottom, var(--accent-color) 0%, var(--accent-hover) 100%);
-    color: white;
-    border: 1px solid var(--accent-color);
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.default-timetable-btn:hover {
-    background: linear-gradient(to bottom, var(--accent-hover) 0%, var(--accent-color) 100%);
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
-}
-
-.default-timetable-btn:active {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .template-controls select:focus,
 .template-controls input:focus {
-    border-color: var(--accent-color);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.2);
-    transform: translateY(-2px);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-color) 18%, transparent);
 }
 
 .template-controls button {
-    padding: 6px 10px;
-    border-radius: 8px;
-    background-color: var(--button-bg);
+    padding: 0 16px;
+    background: color-mix(in srgb, var(--button-bg) 85%, white 15%);
     color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 32px;
-    white-space: nowrap;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.07);
 }
 
-.template-controls button:hover {
-    background-color: var(--button-hover);
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-/* Header Layout */
-.header-main {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
-
-.header-main h2 {
-    margin: 0;
-    flex: 1;
-}
-
-.header-admin {
-    margin-left: auto;
-}
-
-/* Header Admin Controls */
-.admin-button-header {
-    background: rgba(238, 65, 26, 0.1) !important;
-    color: #ee411a !important;
-    border: 2px solid #ee411a !important;
-    border-radius: 50% !important;
-    width: 40px !important;
-    height: 40px !important;
-    font-size: 1.2rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    transition: all 0.3s ease !important;
-    cursor: pointer !important;
-    margin-left: 8px !important;
-    padding: 0 !important;
-}
-
-.admin-button-header:hover {
-    background: #ee411a !important;
-    color: white !important;
-    transform: scale(1.1) !important;
-    box-shadow: 0 4px 12px rgba(238, 65, 26, 0.3) !important;
-}
-
-.admin-button-header.terminal {
-    color: #2c3e50 !important;
-    border-color: #2c3e50 !important;
-    background: rgba(44, 62, 80, 0.1) !important;
-}
-
-.admin-button-header.terminal:hover {
-    background: #2c3e50 !important;
-    color: white !important;
-    box-shadow: 0 4px 12px rgba(44, 62, 80, 0.3) !important;
-}
-
-/* Admin Controls */
-.admin-controls {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.admin-button.terminal {
-    background-color: #2c3e50 !important;
-    font-size: 0.85rem;
-    padding: 8px 12px;
-}
-
-.admin-button.terminal:hover {
-    background-color: #34495e !important;
-    box-shadow: 0 5px 15px rgba(44, 62, 80, 0.4) !important;
-}
-
-/* Admin Button */
-.admin-button {
-    background-color: #ee411a !important;
-    color: white !important;
-    border: none !important;
-    font-weight: bold !important;
-    min-width: 80px;
-    min-height: 32px;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease !important;
-    white-space: nowrap;
-}
-
-.admin-button:hover {
-    background-color: #c5341c !important;
-    transform: translateY(-3px) scale(1.05) !important;
-    box-shadow: 0 5px 15px rgba(238, 65, 26, 0.4) !important;
-}
-
-.admin-button:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-}
-
-.admin-button:hover:before {
-    transform: translateX(100%);
-}
-
-.template-controls button:active {
+.template-controls button:hover,
+.template-controls select:hover {
     transform: translateY(-1px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.09);
 }
 
+.default-timetable-dropdown-container,
 .save-template {
     display: flex;
-    gap: 5px;
-    align-items: center;
 }
 
-.save-template button {
-    min-width: auto;
-    white-space: nowrap;
-}
-
+.default-timetable-btn,
+.save-template-btn,
+.edit-mode-toggle,
+.color-legend-btn,
+.import-button,
 .delete-template-btn {
-    background-color: var(--danger-color, #ff5454);
-    color: white;
-    border-color: var(--danger-color, #ff5454);
-    padding: 6px 12px;
-    min-width: 80px;
-    min-height: 32px;
-}
-
-.delete-template-btn:hover {
-    background-color: var(--danger-hover, #ff3333);
-    border-color: var(--danger-hover, #ff3333);
-}
-
-.edit-mode-toggle {
-    min-height: 32px;
-    white-space: nowrap;
-}
-
-.edit-mode-toggle.active {
-    background-color: var(--accent-color);
-    color: white;
-    border-color: var(--accent-color);
-}
-
-/* Default Timetable Selector */
-.default-timetable-selector {
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    margin: 0 5px;
-}
-
-.selector-label {
-    font-size: 0.7rem;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
-    text-align: center;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    line-height: 1;
-}
-
-.default-timetable-dropdown {
-    padding: 6px 10px;
-    border-radius: 8px;
-    background: linear-gradient(to bottom, var(--button-bg) 0%, var(--button-bg-darker, #e8e8e8) 100%);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    min-height: 32px;
-    min-width: 150px;
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    padding-right: 28px;
-}
-
-.default-timetable-dropdown:hover {
-    background: linear-gradient(to bottom, var(--button-hover) 0%, var(--accent-color-lighter, #f0f0f0) 100%);
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    border-color: var(--accent-color-lighter, #dadada);
-}
-
-.default-timetable-dropdown:focus {
-    border-color: var(--accent-color);
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.2);
-}
-
-.default-timetable-dropdown:hover {
-    background-color: var(--button-hover);
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.default-timetable-dropdown:focus {
-    border-color: var(--accent-color);
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.2);
-}
-
-/* Day Selector Buttons */
-.day-selector {
-    display: flex;
-    gap: 6px; /* Optimized gap for 1000px width */
-    margin-bottom: 25px;
-    flex-wrap: nowrap;
-    justify-content: center;
-    max-width: 100%;
-    padding: 0 10px; /* Reduced padding for better fit */
-    width: 100%; /* Ensure full width usage */
-}
-/* Media queries for responsive design */
-@media (max-width: 768px) {
-    .default-timetable-selector {
-        margin: 10px 0;
-    }
-    
-    .template-controls {
-        justify-content: center;
-    }
-    
-    .day-selector {
-        gap: 2px;
-        padding: 0 5px;
-    }
-    
-    .day-button {
-        padding: 4px 6px;
-        font-size: 0.65rem;
-        min-width: 35px;
-        max-width: 40px;
-        height: 28px;
-        white-space: nowrap;
-        line-height: 1.1;
-    }
-}
-
-.day-button {
-    padding: 6px 10px; /* Good padding for 1000px width */
-    border-radius: 6px;
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    font-size: 0.75rem; /* Optimized size for single-line text */
-    font-weight: 500;
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    min-width: 55px; /* Increased for better proportion at 1000px */
-    max-width: 70px; /* Increased for better text display */
-    height: 32px; /* Fixed height to prevent vertical stretching */
-    display: flex; /* Use flexbox for perfect centering */
-    align-items: center; /* Center vertically */
-    justify-content: center; /* Center horizontally */
-    text-align: center; /* Fallback for text centering */
-    flex: 1; /* Allow buttons to grow equally to fill space */
-    white-space: nowrap; /* Force text to stay on one line */
-    line-height: 1; /* Normalize line height for better centering */
-}
-.day-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.day-button:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-.day-button:hover::before {
-    opacity: 1;
-}
-
-.day-button.active {
-    background-color: var(--accent-color);
-    color: white;
-    border-color: var(--accent-color);
-    transform: translateY(-4px) scale(1.05);
-    box-shadow: 0 8px 25px rgba(var(--accent-color-rgb), 0.3);
-    animation: pulse-light 1.5s ease-in-out infinite alternate;
-}
-
-.day-button.active::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 30%;
-    height: 3px;
-    background-color: rgba(255, 255, 255, 0.7);
-    border-radius: 3px;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.day-button.active:hover::after {
-    width: 50%;
-}
-
-.current-day-display {
-    font-size: 1rem;
-    color: var(--text-secondary);
-    margin: 10px 0;
-}
-
-.current-day-display span {
-    font-weight: 600;
-    color: var(--accent-color);
-}
-
-/* Timetable Grid */
-.timetable {
-    display: grid;
-    grid-template-columns: 180px 1fr; /* narrower left column to bring columns closer */
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    overflow: visible; /* Changed from hidden to visible to allow elements to pop out */
-    width: 100%;
-    margin-bottom: 20px; /* Add bottom margin */
-    transition: transform .2s ease, box-shadow .25s ease, opacity .3s ease;
-    height: auto !important; /* Only as tall as content */
-    position: relative; /* Ensure proper z-index stacking */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-}
-
-.timetable::-webkit-scrollbar {
-    display: none;
-
-/* Reveal styling for timetable slots */
-.time-slot.reveal { opacity: 0; transform: translateY(6px); }
-.time-slot.reveal.is-visible { opacity: 1; transform: translateY(0); }
-    width: 0;
-    background: transparent;
-}
-
-.periods-column {
-    background-color: rgba(0, 0, 0, 0.03);
-    border-right: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-}
-
-.periods-column::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    background: transparent;
-}
-
-.day-column {
-    display: flex;
-    flex-direction: column;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-}
-
-.day-column::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    background: transparent;
-}
-
-.period-label {
-    padding: 18px 12px; /* Increased padding */
-    border-bottom: 1px solid var(--border-color);
-    font-weight: 500;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    height: 160px; /* Increased from 140px to 160px */
-}
-
-/* Special styling for break period labels */
-.period-label[data-period="Recess"],
-.period-label[data-period="Lunch"] {
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.02));
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    height: 130px; /* Match the height of break period rows */
-    border-bottom: 1px solid var(--border-color);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.02);
-    animation: fadeIn 0.5s ease-in-out;
-}
-
-.period-label .time {
-    display: block;
-    font-size: 0.85rem;
-    opacity: 0.8;
-    margin-top: 6px;
-    text-align: center;
-}
-
-.period-row {
-    padding: 16px; /* tighter padding to reduce empty space */
-    border-bottom: 1px solid var(--border-color);
-    height: 160px; /* Increased from 140px to 160px */
-    position: relative; /* Added to establish stacking context */
-    overflow: visible !important; /* Allow items to pop out */
-    z-index: 1; /* Base z-index for period rows */
-    transition: all 0.3s ease;
-}
-
-/* Create fade in animation */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Special styling for break period rows */
-.period-row[data-period="Recess"],
-.period-row[data-period="Lunch"] {
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.01), rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.01));
-    padding: 14px 16px; /* tighter padding */
-    height: 130px; /* Slightly shorter height than regular periods */
-    position: relative;
-    z-index: 2; /* Higher z-index to allow hover effects to work properly */
-    animation: fadeIn 0.5s ease-in-out;
-    transform-origin: top center;
-}
-
-/* Style the "Add Class" button in break periods */
-.period-row[data-period="Recess"] .add-time-slot button,
-.period-row[data-period="Lunch"] .add-time-slot button {
-    background-color: rgba(0, 0, 0, 0.02);
-    border-style: dashed;
-    font-size: 0.9rem;
-    padding: 12px;
-}
-
-.period-row[data-period="Recess"] .add-time-slot button:hover,
-.period-row[data-period="Lunch"] .add-time-slot button:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    transform: translateY(-2px);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-}
-
-.period-row.has-editing-slot,
-.period-label.editing {
-    height: auto;
-}
-
-.period-label span {
-    display: block;
-}
-
-.period-label:last-child, 
-.period-row:last-child {
-    border-bottom: none;
-}
-
-/* Add Time Slot Button */
-.add-time-slot {
-    margin-top: 3px; /* tighter */
-}
-
-/* --- Size overrides to ensure period labels fit inside boxes --- */
-/* These rules are placed at the end to override earlier defaults */
-
-/* Larger default size for all periods; allow content to expand */
-.timetable .period-label {
-    height: auto;           /* override fixed heights above */
-    min-height: 0;          /* allow true content-fit */
-    padding: 3px;           /* ultra-compact */
-    transition: height 180ms ease; /* smooth expand/shrink */
-    will-change: height;
-}
-
-.timetable .period-row {
-    height: auto;           /* override fixed heights above */
-    min-height: 0;          /* allow true content-fit */
-    padding: 3px 3px 2px;   /* reduce bottom by 1px to offset border */
-    transition: height 180ms ease, padding 180ms ease; /* smooth expand/shrink */
-    will-change: height;
-}
-
-/* Break periods slightly shorter but still roomy */
-.timetable .period-label[data-period="Recess"],
-.timetable .period-label[data-period="Lunch"],
-.timetable .period-row[data-period="Recess"],
-.timetable .period-row[data-period="Lunch"] {
-        height: auto;           /* allow growth if needed */
-    min-height: 0;
-}
-
-/* Improve wrapping for multi-line labels */
-.timetable .period-label span {
-        line-height: 1.3;
-        word-break: break-word;
-        overflow-wrap: anywhere;
-        hyphens: auto;
-}
-
-/* Responsive min-heights so layout scales on smaller screens */
-@media (max-width: 900px) {
-        .timetable .period-label { min-height: 0; }
-        .timetable .period-row { min-height: 0; }
-    .timetable .period-label[data-period="Recess"],
-    .timetable .period-label[data-period="Lunch"],
-    .timetable .period-row[data-period="Recess"],
-    .timetable .period-row[data-period="Lunch"] { min-height: 0; }
-}
-
-@media (max-width: 600px) {
-        .timetable .period-label { min-height: 0; padding: 3px; }
-        .timetable .period-row { min-height: 0; padding: 3px; }
-    .timetable .period-label[data-period="Recess"],
-    .timetable .period-label[data-period="Lunch"],
-    .timetable .period-row[data-period="Recess"],
-    .timetable .period-row[data-period="Lunch"] { min-height: 0; }
-}
-
-.add-time-slot button {
-    width: 100%;
-    padding: 3px; /* ultra-compact */
-    border: 1px dashed var(--border-color);
-    background-color: transparent;
-    color: var(--text-secondary);
-    border-radius: 6px;
-    transition: all 0.2s ease;
-}
-
-.add-time-slot button:hover {
-    background-color: var(--button-hover);
-    color: var(--text-primary);
-}
-
-/* Time slot styling */
-.time-slot {
-    background-color: var(--accent-color);
-    border-radius: 6px; /* Match other themes */
-    padding: 3px; /* ultra-compact */
-    color: white;
-    margin-bottom: 2px; /* minimal vertical separation */
-    margin: 0; /* remove side margins */
-    box-shadow: 0 1px 3px var(--shadow-color);
-    transition: all 0.3s ease;
-    animation: fadeIn 0.5s ease forwards;
-    position: relative;
-    overflow: visible !important; /* Changed from 'hidden' to allow elements to pop out */
-    cursor: pointer; /* Add cursor pointer to indicate clickable */
-    user-select: none; /* Prevent text selection */
-    z-index: 5; /* Base z-index for all time slots */
-    width: 100%; /* use full width inside row */
-}
-
-/* Remove extra space under the last item in a period */
-.period-row .time-slot:last-child { margin-bottom: 0; box-shadow: none; }
-.period-row > :last-child { margin-bottom: 0; }
-
-.time-slot:hover {
-    transform: translateY(-1px); /* subtle hover intent */
-    box-shadow: 0 3px 6px var(--shadow-color);
-}
-
-.time-slot:active {
-    transform: scale(0.98);
-    opacity: 0.9;
-    box-shadow: 0 2px 5px var(--shadow-color);
-}
-
-.time-slot:active::before {
-    opacity: 0.4;
-    background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 50%);
-}
-
-.time-slot::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%);
-    opacity: 0;
-    transition: opacity 0.4s ease;
-}
-
-.time-slot:hover::before {
-    opacity: 1;
-}
-
-.time-slot-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2px; /* even tighter */
-}
-
-.time-slot h3 {
-    margin: 0 0 2px 0; /* minimal */
-    font-size: 1.1rem; /* balanced size */
-    font-weight: 600;
-}
-
-.time-slot h3.subject-title {
-    margin: 0 0 2px 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    word-break: break-word;
-    line-height: 1.3;
-}
-
-.time-slot p {
-    margin: 0; /* remove extra space */
-    font-size: 0.85rem; /* Smaller font size to match */
-    opacity: 1;
-}
-
-.time-slot .time {
-    font-size: 0.8rem; /* Smaller font size */
-    opacity: 1;
-}
-
-.time-slot-actions button {
-    background: none;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    opacity: 1;
-    cursor: pointer !important;
-    padding: 4px 8px; /* Increased padding for better clickability */
-    font-size: 0.8rem; /* Smaller font */
-    transition: all 0.2s ease;
-    border-radius: 4px;
-    user-select: none;
-    pointer-events: auto; /* Explicitly enable pointer events */
-    position: relative; /* Ensure proper stacking context */
-    z-index: 10; /* Higher than parent elements */
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    -webkit-appearance: button;
-    appearance: button;
-    margin-left: 5px; /* Add spacing between buttons */
 }
 
-.time-slot-actions button:hover {
-    opacity: 1;
-    background-color: rgba(255, 255, 255, 0.1);
+.default-timetable-btn,
+.save-template-btn,
+.color-legend-btn {
+    background: color-mix(in srgb, var(--accent-color) 92%, white 8%) !important;
+    color: white !important;
+    border-color: color-mix(in srgb, var(--accent-color) 88%, black 12%) !important;
 }
 
-.time-slot-actions button:active {
-    transform: scale(0.95);
-    opacity: 0.9;
+.default-timetable-btn:hover,
+.save-template-btn:hover,
+.color-legend-btn:hover {
+    background: color-mix(in srgb, var(--accent-color) 82%, black 18%) !important;
 }
 
-.delete-button {
-    font-size: 1.2rem;
-    font-weight: bold;
+.delete-template-btn {
+    background: color-mix(in srgb, #e54848 90%, white 10%) !important;
+    color: white !important;
+    border-color: color-mix(in srgb, #e54848 88%, black 12%) !important;
 }
 
-/* Edit mode styling */
-.time-slot.editing {
-    background-color: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 2px solid var(--accent-color);
-    padding: 12px; /* tighter but enough for inputs */
-    transform: none;
-    position: relative;
-    z-index: 20;  /* Higher z-index */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-    animation: highlight-edit 1.5s ease forwards;
-    pointer-events: auto;
-    user-select: auto;
-    max-width: 100%;
-    width: 100%;
-    box-sizing: border-box;
+.delete-template-btn:hover {
+    background: #c93636 !important;
 }
 
-/* Current period pulse halo (subtle) */
-.time-slot.current-period::after {
-        content: '';
-        position: absolute;
-        inset: -2px;
-        border-radius: inherit;
-        pointer-events: none;
-        box-shadow: 0 0 0 0 rgba(255,255,255,.35);
-        animation: currentPulse 2.8s ease-in-out infinite;
+.edit-mode-toggle.active {
+    background: color-mix(in srgb, var(--accent-color) 14%, white 86%) !important;
+    color: var(--accent-color) !important;
+    border-color: color-mix(in srgb, var(--accent-color) 35%, transparent) !important;
 }
 
-@keyframes currentPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,.22); }
-    50% { box-shadow: 0 0 0 6px rgba(255,255,255,.08); }
-}
-
-@keyframes highlight-edit {
-    0% { box-shadow: 0 0 0 0 rgba(var(--accent-color-rgb), 0.7); }
-    70% { box-shadow: 0 0 0 15px rgba(var(--accent-color-rgb), 0); }
-    100% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); }
-}
-
-.time-slot-edit-header h4 {
-    text-align: center;
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-weight: 600;
-    color: var(--accent-color);
-}
-
-.time-slot-edit-form .form-group {
-    margin-bottom: 15px;
-    position: relative;
-}
-
-.time-slot-edit-form label {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    font-weight: 600;
-    user-select: none;
-}
-
-.time-slot-edit-form input {
-    width: 100%;
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    transition: all 0.2s ease;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    cursor: text;
-}
-
-.time-slot-edit-form input:focus {
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.05);
-    outline: none;
-}
-
-.time-slot-edit-form input:focus-within,
-.time-slot-edit-form input:focus {
-    animation: pulse-input 1.5s ease-in-out infinite;
-    border-color: var(--accent-color);
-}
-
-@keyframes pulse-input {
-    0% { box-shadow: 0 0 0 0 rgba(var(--accent-color-rgb), 0.4); }
-    70% { box-shadow: 0 0 0 5px rgba(var(--accent-color-rgb), 0); }
-    100% { box-shadow: 0 0 0 0 rgba(var(--accent-color-rgb), 0); }
-}
-
-.form-actions {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    margin-top: 20px;
-    gap: 10px;
-}
-
-.form-actions button {
-    flex: 1;
-    padding: 10px 12px;
-    border-radius: 6px;
-    cursor: pointer !important;
-    transition: all 0.3s ease;
-    font-weight: 500;
-    border: none;
-    font-size: 0.92rem;
-    user-select: none;
-    -webkit-appearance: button;
-    appearance: button;
-    text-align: center;
-    white-space: nowrap;
-    min-width: auto;
-    pointer-events: auto; /* Explicitly enable pointer events */
-    position: relative; /* Ensure proper stacking context */
-    z-index: 25; /* Higher than parent elements */
-}
-
-.form-actions button:active {
-    transform: scale(0.98);
-}
-
-.form-actions .save-button {
-    background-color: var(--accent-color);
-    color: white;
-    box-shadow: 0 2px 5px rgba(var(--accent-color-rgb), 0.3);
-}
-
-.form-actions .save-button:hover {
-    background-color: var(--accent-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(var(--accent-color-rgb), 0.4);
-}
-
-.form-actions .save-button:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(var(--accent-color-rgb), 0.3);
-}
-
-.form-actions .delete-button {
-    background-color: #ef4444;
-    color: white;
-    border: none;
-    box-shadow: 0 2px 5px rgba(239, 68, 68, 0.3);
-}
-
-.form-actions .delete-button:hover {
-    background-color: #dc2626;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.4);
-}
-
-.form-actions .delete-button:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
-}
-
-.form-actions .cancel-button {
-    background-color: var(--button-bg);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-.form-actions .cancel-button:hover {
-    background-color: var(--button-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.form-actions .cancel-button:active {
-    transform: translateY(0);
-    box-shadow: none;
-}
-
-/* Edit mode hint */
 .edit-mode-hint {
-    margin: 10px 0;
-    padding: 8px 15px;
-    background-color: rgba(var(--accent-color-rgb), 0.1);
-    border-left: 3px solid var(--accent-color);
-    border-radius: 4px;
-    animation: fadeIn 0.5s ease;
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--accent-color) 9%, white 91%);
+    border: 1px solid color-mix(in srgb, var(--accent-color) 22%, transparent);
+    color: var(--text-secondary);
+    position: relative;
+    z-index: 1;
 }
 
 .edit-mode-hint p {
     margin: 0;
-    font-size: 0.9rem;
-    color: var(--text-primary);
+    line-height: 1.55;
 }
 
 .edit-button-hint {
-    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    margin: 0 4px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent-color) 14%, white 86%);
     color: var(--accent-color);
-    padding: 2px 6px;
-    background-color: rgba(var(--accent-color-rgb), 0.1);
-    border-radius: 4px;
+    font-weight: 700;
 }
 
-.edit-period-label {
-    display: block;
-    text-align: center;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin-bottom: 15px;
-    opacity: 0.8;
-}
-
-/* Dark theme specific styling for timetable container */
-.theme-dark .timetable-container,
-[data-theme="dark"] .timetable-container {
-    background: linear-gradient(145deg, #0a0a0a, #121212);
-    border: 1px solid rgba(30, 30, 30, 0.4);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.02);
-}
-
-/* Dark theme styling for timetable headers */
-.theme-dark .timetable-header h2,
-[data-theme="dark"] .timetable-header h2 {
-    color: #f0f0f0;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    letter-spacing: -0.5px;
-}
-
-/* Dark theme styling for day selector and buttons */
-.theme-dark .day-button,
-[data-theme="dark"] .day-button {
-    background: linear-gradient(145deg, #0f0f0f, #161616);
-    border: 1px solid rgba(30, 30, 30, 0.4);
-    color: #e4e6eb;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.02);
-    transition: all 0.3s ease;
-}
-
-.theme-dark .day-button:hover,
-[data-theme="dark"] .day-button:hover {
-    background: linear-gradient(145deg, #141414, #1a1a1a);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.03);
-    transform: translateY(-2px);
-}
-
-.theme-dark .day-button.active,
-[data-theme="dark"] .day-button.active {
-    background: linear-gradient(145deg, #221d2e, #2b2440);
-    color: #ffffff;
-    border-color: rgba(78, 67, 118, 0.5);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1);
-}
-
-/* Dark theme timetable grid styling */
-.theme-dark .timetable,
-[data-theme="dark"] .timetable {
-    border: 1px solid rgba(30, 30, 30, 0.5);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-    background: linear-gradient(145deg, #0d0d0d, #131313);
-}
-
-.theme-dark .current-day-display,
-[data-theme="dark"] .current-day-display {
-    color: #a0a0a0;
-}
-
-.theme-dark .current-day-display span,
-[data-theme="dark"] .current-day-display span {
-    color: #9985d1;
-    text-shadow: 0 0 5px rgba(78, 67, 118, 0.3);
-}
-
-/* Dark theme time slot styling */
-.theme-dark .time-slot,
-[data-theme="dark"] .time-slot {
-    /* Background is now controlled by TimeSlot.js component */
-    padding: 12px; /* Match other themes */
-    margin: 5px; /* Match other themes */
-    border-radius: 6px; /* Match other themes */
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(40, 40, 40, 0.5);
-    /* Increase text clarity */
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-.theme-dark .time-slot:hover,
-[data-theme="dark"] .time-slot:hover {
-    transform: translateY(-2px); /* Match other themes */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.07);
-    filter: brightness(1.1);
-}
-
-/* Enhanced time slot styling for dark theme */
-.theme-dark .time-slot h3,
-[data-theme="dark"] .time-slot h3 {
-    font-weight: 600;
-    letter-spacing: 0.3px;
-    margin-bottom: 6px; /* Reduced spacing */
-    font-size: 1rem; /* Slightly smaller */
-}
-
-.theme-dark .time-slot .time,
-[data-theme="dark"] .time-slot .time {
-    font-weight: 500;
-    opacity: 0.9;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-    font-size: 0.9rem; /* Smaller font size */
-}
-
-.theme-dark .time-slot p,
-[data-theme="dark"] .time-slot p {
-    opacity: 0.85;
-    font-size: 0.85rem; /* Smaller for better fit */
-    line-height: 1.3; /* Tighter line height */
-    margin: 3px 0; /* Reduced margins */
-}
-
-/* Time slot buttons in dark theme */
-.theme-dark .time-slot-actions button,
-[data-theme="dark"] .time-slot-actions button {
-    background-color: rgba(0, 0, 0, 0.2);
-    color: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    transition: all 0.3s ease;
-    padding: 4px 8px; /* Smaller padding */
-    font-size: 0.8rem; /* Smaller font */
-}
-
-.theme-dark .time-slot-actions button:hover,
-[data-theme="dark"] .time-slot-actions button:hover {
-    background-color: rgba(0, 0, 0, 0.3);
-    color: rgba(255, 255, 255, 1);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-}
-
-/* Dark theme add time slot button */
-.theme-dark .add-time-slot button,
-[data-theme="dark"] .add-time-slot button {
-    border: 1px dashed rgba(40, 40, 40, 0.8);
-    color: #a0a0a0;
-}
-
-.theme-dark .add-time-slot button:hover,
-[data-theme="dark"] .add-time-slot button:hover {
-    background-color: rgba(40, 40, 40, 0.5);
-    color: #f0f0f0;
-    border: 1px dashed rgba(78, 67, 118, 0.5);
-}
-
-/* Color Legend Button */
-.color-legend-btn {
-    background: linear-gradient(45deg, var(--accent-color-lighter, #f0f4ff) 0%, var(--bg-primary) 100%);
-    color: var(--accent-color);
-    border: 1px solid var(--accent-color-lighter, #dadada);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    white-space: nowrap;
-    min-height: 32px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
-
-.color-legend-btn:hover {
-    background: linear-gradient(45deg, var(--accent-color-rgb, 100, 120, 200, 0.1) 0%, var(--accent-color-rgb, 100, 120, 200, 0.2) 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.color-legend-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
-}
-
-/* Dark theme styling for color legend button */
-.theme-dark .color-legend-btn,
-[data-theme="dark"] .color-legend-btn {
-    background: linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-    color: var(--accent-color);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.theme-dark .color-legend-btn:hover,
-[data-theme="dark"] .color-legend-btn:hover {
-    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* Tutorial Highlighting Styles */
-.tutorial-highlight {
-    position: relative !important;
-    z-index: 9999 !important;
-    border: 3px solid #4f46e5 !important;
-    border-radius: 8px !important;
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2), 
-                0 8px 25px rgba(79, 70, 229, 0.3) !important;
-    animation: tutorialPulse 2s infinite;
-    background-color: rgba(79, 70, 229, 0.05) !important;
-    pointer-events: auto !important;
-}
-
-.tutorial-highlight::before {
-    content: '';
-    position: absolute;
-    top: -8px;
-    left: -8px;
-    right: -8px;
-    bottom: -8px;
-    border: 2px dashed #4f46e5;
-    border-radius: 12px;
-    animation: tutorialFade 2s ease-in-out infinite;
-    pointer-events: none;
-    z-index: -1;
-}
-
-.tutorial-highlight::after {
-    content: '👆 Click here';
-    position: absolute;
-    top: -40px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #4f46e5;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-    pointer-events: none;
-    animation: tutorialBounce 1s ease-in-out infinite alternate;
-    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
-    z-index: 10000;
-}
-
-/* Special highlighting for buttons */
-.tutorial-highlight.day-button::after,
-.tutorial-highlight.edit-mode-toggle::after,
-.tutorial-highlight button::after {
-    content: '👆 Click me';
-    top: -35px;
-}
-
-/* Special highlighting for different elements */
-.tutorial-highlight.day-selector {
-    border-color: #22c55e !important;
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2), 
-                0 8px 25px rgba(34, 197, 94, 0.3) !important;
-}
-
-.tutorial-highlight.day-selector::before {
-    border-color: #22c55e;
-}
-
-.tutorial-highlight.day-selector::after {
-    background: #22c55e;
-    content: '👆 Try clicking different days';
-}
-
-.tutorial-highlight.template-controls {
-    border-color: #f59e0b !important;
-    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2), 
-                0 8px 25px rgba(245, 158, 11, 0.3) !important;
-}
-
-.tutorial-highlight.template-controls::before {
-    border-color: #f59e0b;
-}
-
-.tutorial-highlight.template-controls::after {
-    background: #f59e0b;
-    content: '👆 Control buttons';
-}
-
-.tutorial-highlight.timetable::after {
-    content: '📅 Your timetable grid';
-    background: #7c3aed;
-}
-
-.tutorial-highlight.add-time-slot::after {
-    content: '➕ Click to add class';
-    background: #059669;
-}
-
-.tutorial-highlight.time-slot::after {
-    content: '✏️ Click to edit';
-    background: #dc2626;
-}
-
-@keyframes tutorialPulse {
-    0%, 100% { 
-        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2), 
-                    0 8px 25px rgba(79, 70, 229, 0.3);
-    }
-    50% { 
-        box-shadow: 0 0 0 8px rgba(79, 70, 229, 0.3), 
-                    0 12px 35px rgba(79, 70, 229, 0.4);
-    }
-}
-
-@keyframes tutorialFade {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
-}
-
-@keyframes tutorialBounce {
-    from { transform: translateX(-50%) translateY(0); }
-    to { transform: translateX(-50%) translateY(-5px); }
-}
-
-/* Overlay to dim non-highlighted content during tutorial */
-.tutorial-overlay {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    background: rgba(0, 0, 0, 0.4) !important;
-    z-index: 9998 !important;
-    pointer-events: auto !important;
-}
-
-/* Dark mode adjustments */
-[data-theme="dark"] .tutorial-highlight::after,
-.theme-dark .tutorial-highlight::after {
-    background: #6366f1;
-    color: white;
-}
-
-[data-theme="dark"] .tutorial-highlight.day-selector::after,
-.theme-dark .tutorial-highlight.day-selector::after {
-    background: #10b981;
-}
-
-[data-theme="dark"] .tutorial-highlight.template-controls::after,
-.theme-dark .tutorial-highlight.template-controls::after {
-    background: #f59e0b;
-}
-
-/* Header Layout */
-.header-main {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
-
-.header-main h2 {
-    margin: 0;
-    flex: 1;
-}
-
-.header-admin {
-    margin-left: auto;
-}
-
-/* Header Admin Controls */
-.admin-button-header {
-    background: rgba(238, 65, 26, 0.1) !important;
-    color: #ee411a !important;
-    border: 2px solid #ee411a !important;
-    border-radius: 50% !important;
-    width: 40px !important;
-    height: 40px !important;
-    font-size: 1.2rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    transition: all 0.3s ease !important;
-    cursor: pointer !important;
-    margin-left: 8px !important;
-    padding: 0 !important;
-}
-
-.admin-button-header:hover {
-    background: #ee411a !important;
-    color: white !important;
-    transform: scale(1.1) !important;
-    box-shadow: 0 4px 12px rgba(238, 65, 26, 0.3) !important;
-}
-
-.admin-button-header.terminal {
-    color: #2c3e50 !important;
-    border-color: #2c3e50 !important;
-    background: rgba(44, 62, 80, 0.1) !important;
-}
-
-.admin-button-header.terminal:hover {
-    background: #2c3e50 !important;
-    color: white !important;
-    box-shadow: 0 4px 12px rgba(44, 62, 80, 0.3) !important;
-}
-
-/* Admin Controls */
-.admin-controls {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.admin-button.terminal {
-    background-color: #2c3e50 !important;
-    font-size: 0.85rem;
-    padding: 8px 12px;
-}
-
-.admin-button.terminal:hover {
-    background-color: #34495e !important;
-    box-shadow: 0 5px 15px rgba(44, 62, 80, 0.4) !important;
-}
-
-/* Admin Button */
-.admin-button {
-    background-color: #ee411a !important;
-    color: white !important;
-    border: none !important;
-    font-weight: bold !important;
-    min-width: 80px;
-    min-height: 32px;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease !important;
-    white-space: nowrap;
-}
-
-.admin-button:hover {
-    background-color: #c5341c !important;
-    transform: translateY(-3px) scale(1.05) !important;
-    box-shadow: 0 5px 15px rgba(238, 65, 26, 0.4) !important;
-}
-
-.admin-button:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-}
-
-.admin-button:hover:before {
-    transform: translateX(100%);
-}
-
-.template-controls button:active {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.save-template {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-}
-
-.save-template button {
-    min-width: auto;
-    white-space: nowrap;
-}
-
-.delete-template-btn {
-    background-color: var(--danger-color, #ff5454);
-    color: white;
-    border-color: var(--danger-color, #ff5454);
-    padding: 6px 12px;
-    min-width: 80px;
-    min-height: 32px;
-}
-
-.delete-template-btn:hover {
-    background-color: var(--danger-hover, #ff3333);
-    border-color: var(--danger-hover, #ff3333);
-}
-
-.edit-mode-toggle {
-    min-height: 32px;
-    white-space: nowrap;
-}
-
-.edit-mode-toggle.active {
-    background-color: var(--accent-color);
-    color: white;
-    border-color: var(--accent-color);
-}
-
-/* Default Timetable Selector */
-.default-timetable-selector {
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    margin: 0 5px;
-}
-
-.selector-label {
-    font-size: 0.7rem;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
-    text-align: center;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    line-height: 1;
-}
-
-.default-timetable-dropdown {
-    padding: 6px 10px;
-    border-radius: 8px;
-    background: linear-gradient(to bottom, var(--button-bg) 0%, var(--button-bg-darker, #e8e8e8) 100%);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    min-height: 32px;
-    min-width: 150px;
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    padding-right: 28px;
-}
-
-.default-timetable-dropdown:hover {
-    background: linear-gradient(to bottom, var(--button-hover) 0%, var(--accent-color-lighter, #f0f0f0) 100%);
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    border-color: var(--accent-color-lighter, #dadada);
-}
-
-.default-timetable-dropdown:focus {
-    border-color: var(--accent-color);
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.2);
-}
-
-.default-timetable-dropdown:hover {
-    background-color: var(--button-hover);
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.default-timetable-dropdown:focus {
-    border-color: var(--accent-color);
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.2);
-}
-
-/* Day Selector Buttons */
 .day-selector {
-    display: flex;
-    gap: 6px; /* Optimized gap for 1000px width */
-    margin-bottom: 25px;
-    flex-wrap: nowrap;
-    justify-content: center;
-    max-width: 100%;
-    padding: 0 10px; /* Reduced padding for better fit */
-    width: 100%; /* Ensure full width usage */
-}
-/* Media queries for responsive design */
-@media (max-width: 768px) {
-    .default-timetable-selector {
-        margin: 10px 0;
-    }
-    
-    .template-controls {
-        justify-content: center;
-    }
-    
-    .day-selector {
-        gap: 2px;
-        padding: 0 5px;
-    }
-    
-    .day-button {
-        padding: 4px 6px;
-        font-size: 0.65rem;
-        min-width: 35px;
-        max-width: 40px;
-        height: 28px;
-        white-space: nowrap;
-        line-height: 1.1;
-    }
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 24px;
+    position: relative;
+    z-index: 1;
 }
 
 .day-button {
-    padding: 6px 10px; /* Good padding for 1000px width */
-    border-radius: 6px;
-    background-color: var(--bg-primary);
+    min-height: 68px;
+    padding: 12px 10px;
+    border: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--bg-secondary) 88%, white 12%);
     color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    font-size: 0.75rem; /* Optimized size for single-line text */
-    font-weight: 500;
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    min-width: 55px; /* Increased for better proportion at 1000px */
-    max-width: 70px; /* Increased for better text display */
-    height: 32px; /* Fixed height to prevent vertical stretching */
-    display: flex; /* Use flexbox for perfect centering */
-    align-items: center; /* Center vertically */
-    justify-content: center; /* Center horizontally */
-    text-align: center; /* Fallback for text centering */
-    flex: 1; /* Allow buttons to grow equally to fill space */
-    white-space: nowrap; /* Force text to stay on one line */
-    line-height: 1; /* Normalize line height for better centering */
-}
-.day-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
-    opacity: 0;
-    transition: opacity 0.3s ease;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 6px;
+    text-align: left;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
 .day-button:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-.day-button:hover::before {
-    opacity: 1;
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
 }
 
 .day-button.active {
-    background-color: var(--accent-color);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent-color) 88%, white 12%) 0%, color-mix(in srgb, var(--accent-color) 72%, black 8%) 100%);
     color: white;
-    border-color: var(--accent-color);
-    transform: translateY(-4px) scale(1.05);
-    box-shadow: 0 8px 25px rgba(var(--accent-color-rgb), 0.3);
-    animation: pulse-light 1.5s ease-in-out infinite alternate;
+    border-color: transparent;
+    box-shadow: 0 20px 34px color-mix(in srgb, var(--accent-color) 30%, transparent);
 }
 
-.day-button.active::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 30%;
-    height: 3px;
-    background-color: rgba(255, 255, 255, 0.7);
-    border-radius: 3px;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+.day-button.current-day:not(.active) {
+    border-color: color-mix(in srgb, var(--accent-color) 38%, transparent);
+    background: color-mix(in srgb, var(--accent-color) 10%, white 90%);
 }
 
-.day-button.active:hover::after {
-    width: 50%;
+.today-text {
+    font-size: 0.76rem;
+    opacity: 0.85;
 }
 
-.current-day-display {
-    font-size: 1rem;
-    color: var(--text-secondary);
-    margin: 10px 0;
-}
-
-.current-day-display span {
-    font-weight: 600;
-    color: var(--accent-color);
-}
-
-/* Timetable Grid */
 .timetable {
-    display: grid;
-    grid-template-columns: 220px 1fr; /* Increased from 200px for better proportion */
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    overflow: visible; /* Changed from hidden to visible to allow elements to pop out */
-    width: 100%;
-    margin-bottom: 20px; /* Add bottom margin */
-    min-height: 0 !important; /* Prevent excess height */
-    height: auto !important; /* Only as tall as content */
-    position: relative; /* Ensure proper z-index stacking */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-}
-
-.timetable::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    background: transparent;
-}
-
-.periods-column {
-    background-color: rgba(0, 0, 0, 0.03);
-    border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-}
-
-.periods-column::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    background: transparent;
+    gap: 16px;
 }
 
 .day-column {
-    display: flex;
-    flex-direction: column;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+    width: 100%;
 }
 
-.day-column::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    background: transparent;
+.period-section {
+    display: grid;
+    grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+    gap: 14px;
+    align-items: stretch;
+}
+
+.period-label,
+.period-row {
+    border-radius: 22px;
+    border: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
+    background: color-mix(in srgb, var(--bg-secondary) 92%, white 8%);
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.05);
 }
 
 .period-label {
-    padding: 18px 12px; /* Increased padding */
-    border-bottom: 1px solid var(--border-color);
-    font-weight: 500;
+    padding: 20px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
-    text-align: center;
-    height: 160px; /* Increased from 140px to 160px */
+    gap: 10px;
 }
 
-/* Special styling for break period labels */
-.period-label[data-period="Recess"],
-.period-label[data-period="Lunch"] {
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.02));
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    height: 130px; /* Match the height of break period rows */
-    border-bottom: 1px solid var(--border-color);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.02);
-    animation: fadeIn 0.5s ease-in-out;
+.period-label span {
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: var(--text-primary);
 }
 
 .period-label .time {
-    display: block;
-    font-size: 0.9rem; /* Increased from 0.8rem */
-    opacity: 0.8; /* Increased from 0.7 */
-    margin-top: 8px; /* Increased from 5px */
-    text-align: center;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-secondary);
 }
 
 .period-row {
-    padding: 25px; /* Increased from 20px to 25px */
-    border-bottom: 1px solid var(--border-color);
-    height: 160px; /* Increased from 140px to 160px */
-    position: relative; /* Added to establish stacking context */
-    overflow: visible !important; /* Allow items to pop out */
-    z-index: 1; /* Base z-index for period rows */
-    transition: all 0.3s ease;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
 }
 
-/* Create fade in animation */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Special styling for break period rows */
+.period-section.break-period-section .period-label,
+.period-section.break-period-section .period-row,
+.period-label[data-period="Recess"],
+.period-label[data-period="Lunch"],
 .period-row[data-period="Recess"],
 .period-row[data-period="Lunch"] {
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.01), rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.01));
-    padding: 20px 25px; /* More balanced padding */
-    height: 130px; /* Slightly shorter height than regular periods */
-    position: relative;
-    z-index: 2; /* Higher z-index to allow hover effects to work properly */
-    animation: fadeIn 0.5s ease-in-out;
-    transform-origin: top center;
-}
-
-/* Style the "Add Class" button in break periods */
-.period-row[data-period="Recess"] .add-time-slot button,
-.period-row[data-period="Lunch"] .add-time-slot button {
-    background-color: rgba(0, 0, 0, 0.02);
-    border-style: dashed;
-    font-size: 0.9rem;
-    padding: 12px;
-}
-
-.period-row[data-period="Recess"] .add-time-slot button:hover,
-.period-row[data-period="Lunch"] .add-time-slot button:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    transform: translateY(-2px);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+    background: color-mix(in srgb, var(--accent-color) 7%, var(--bg-secondary) 93%);
 }
 
 .period-row.has-editing-slot,
 .period-label.editing {
-    height: auto;
+    border-color: color-mix(in srgb, var(--accent-color) 40%, transparent);
+    box-shadow: 0 18px 36px color-mix(in srgb, var(--accent-color) 16%, transparent);
 }
 
-.period-label span {
-    display: block;
-}
-
-.period-label:last-child, 
-.period-row:last-child {
-    border-bottom: none;
-}
-
-/* Add Time Slot Button */
 .add-time-slot {
-    margin-top: 10px;
+    display: flex;
 }
 
 .add-time-slot button {
     width: 100%;
-    padding: 10px;
-    border: 1px dashed var(--border-color);
-    background-color: transparent;
-    color: var(--text-secondary);
-    border-radius: 6px;
-    transition: all 0.2s ease;
+    min-height: 72px;
+    border-radius: 18px;
+    border: 1.5px dashed color-mix(in srgb, var(--accent-color) 40%, transparent);
+    background: color-mix(in srgb, var(--accent-color) 8%, white 92%);
+    color: var(--accent-color);
+    font-weight: 700;
+    font-size: 0.96rem;
 }
 
 .add-time-slot button:hover {
-    background-color: var(--button-hover);
-    color: var(--text-primary);
+    background: color-mix(in srgb, var(--accent-color) 14%, white 86%);
+    transform: translateY(-1px);
 }
 
-/* Time slot styling */
 .time-slot {
-    background-color: var(--accent-color);
-    border-radius: 6px; /* Match other themes */
-    padding: 12px; /* Match other themes */
-    color: white;
-    margin-bottom: 5px; /* Match other themes */
-    margin: 5px; /* Match other themes */
-    box-shadow: 0 3px 10px var(--shadow-color);
-    transition: all 0.3s ease;
-    animation: fadeIn 0.5s ease forwards;
     position: relative;
-    overflow: visible !important; /* Changed from 'hidden' to allow elements to pop out */
-    cursor: pointer; /* Add cursor pointer to indicate clickable */
-    user-select: none; /* Prevent text selection */
-    z-index: 5; /* Base z-index for all time slots */
-    width: calc(100% - 30px); /* Ensure there's room for highlighting effects */
+    width: 100%;
+    min-width: 0;
+    padding: 16px 18px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 16px 26px rgba(15, 23, 42, 0.16);
+    overflow: hidden;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
 }
 
 .time-slot:hover {
-    transform: translateY(-2px); /* Match other themes */
-    box-shadow: 0 4px 8px var(--shadow-color);
-}
-
-.time-slot:active {
-    transform: scale(0.98);
-    opacity: 0.9;
-    box-shadow: 0 2px 5px var(--shadow-color);
-}
-
-.time-slot:active::before {
-    opacity: 0.4;
-    background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 50%);
+    transform: translateY(-2px);
+    box-shadow: 0 20px 32px rgba(15, 23, 42, 0.2);
 }
 
 .time-slot::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%);
-    opacity: 0;
-    transition: opacity 0.4s ease;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 55%);
+    opacity: 0.7;
+    pointer-events: none;
 }
 
-.time-slot:hover::before {
+.time-slot.reveal {
+    opacity: 0;
+    transform: translateY(6px);
+}
+
+.time-slot.reveal.is-visible {
     opacity: 1;
+    transform: translateY(0);
 }
 
 .time-slot-header {
     display: flex;
+    align-items: flex-start;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 6px; /* Match other themes */
-}
-
-.time-slot h3 {
-    margin: 0 0 6px 0; /* Match other themes */
-    font-size: 1rem; /* Standard size */
-    font-size: 1.2rem; /* Increased from 1.1rem */
-    font-weight: 600;
-}
-
-.time-slot h3.subject-title {
-    margin: 0 0 6px 0;
-    font-size: 1.2rem;
-    font-weight: 600;
-    word-break: break-word;
-    line-height: 1.3;
-}
-
-.time-slot p {
-    margin: 3px 0; /* Reduced margin to match other themes */
-    font-size: 0.85rem; /* Smaller font size to match */
-    opacity: 0.9;
+    gap: 12px;
+    margin-bottom: 14px;
 }
 
 .time-slot .time {
-    font-size: 0.8rem; /* Smaller font size */
+    font-size: 0.82rem;
+    font-weight: 700;
     opacity: 0.9;
+}
+
+.time-slot h3,
+.time-slot h3.subject-title {
+    margin: 0 0 8px;
+    font-size: 1.15rem;
+    line-height: 1.15;
+    font-weight: 800;
+}
+
+.time-slot p {
+    margin: 4px 0 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    opacity: 0.95;
+}
+
+.time-slot-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
 }
 
 .time-slot-actions button {
-    background: none;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    opacity: 0.9;
-    cursor: pointer !important;
-    padding: 4px 8px; /* Increased padding for better clickability */
-    font-size: 0.8rem; /* Smaller font */
-    transition: all 0.2s ease;
-    border-radius: 4px;
-    user-select: none;
-    pointer-events: auto; /* Explicitly enable pointer events */
-    position: relative; /* Ensure proper stacking context */
-    z-index: 10; /* Higher than parent elements */
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-appearance: button;
-    appearance: button;
-    margin-left: 5px; /* Add spacing between buttons */
+    min-width: 52px;
+    min-height: 34px;
+    border-radius: 999px;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    font-size: 0.8rem;
+    font-weight: 700;
+    backdrop-filter: blur(8px);
 }
 
 .time-slot-actions button:hover {
-    opacity: 1;
-    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
 }
 
-.time-slot-actions button:active {
-    transform: scale(0.95);
-    opacity: 0.9;
-}
-
-.delete-button {
-    font-size: 1.2rem;
-    font-weight: bold;
-}
-
-/* Edit mode styling */
 .time-slot.editing {
-    background-color: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 2px solid var(--accent-color);
     padding: 20px;
-    transform: none;
-    position: relative;
-    z-index: 20;  /* Higher z-index */
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-    animation: highlight-edit 1.5s ease forwards;
-    pointer-events: auto;
-    user-select: auto;
-    max-width: 100%;
+    background: color-mix(in srgb, var(--bg-secondary) 96%, white 4%);
+    color: var(--text-primary);
+    border: 1px solid color-mix(in srgb, var(--accent-color) 26%, transparent);
+    box-shadow: 0 18px 34px color-mix(in srgb, var(--accent-color) 12%, transparent);
 }
 
-@keyframes highlight-edit {
-    0% { box-shadow: 0 0 0 0 rgba(var(--accent-color-rgb), 0.7); }
-    70% { box-shadow: 0 0 0 15px rgba(var(--accent-color-rgb), 0); }
-    100% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); }
+.time-slot-edit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 18px;
 }
 
 .time-slot-edit-header h4 {
-    text-align: center;
-    margin-top: 0;
-    margin-bottom: 15px;
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.edit-period-label {
+    color: var(--text-secondary);
+    font-size: 0.84rem;
     font-weight: 600;
-    color: var(--accent-color);
+}
+
+.time-slot-edit-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
 }
 
 .time-slot-edit-form .form-group {
-    margin-bottom: 15px;
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .time-slot-edit-form label {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 0.9rem;
+    font-size: 0.84rem;
+    font-weight: 700;
     color: var(--text-secondary);
-    font-weight: 600;
-    user-select: none;
 }
 
 .time-slot-edit-form input {
-    width: 100%;
-    padding: 10px;
-    border-radius: 6px;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 14px;
     border: 1px solid var(--border-color);
-    background-color: var(--bg-primary);
+    background: var(--bg-primary);
     color: var(--text-primary);
-    font-size: 0.95rem;
-    transition: all 0.2s ease;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    cursor: text;
 }
 
-.time-slot-edit-form input:focus {
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.05);
+.time-slot-edit-form input:focus,
+.time-slot-edit-form input:focus-within {
     outline: none;
-}
-
-.time-slot-edit-form input:focus-within,
-.time-slot-edit-form input:focus {
-    animation: pulse-input 1.5s ease-in-out infinite;
     border-color: var(--accent-color);
-}
-
-@keyframes pulse-input {
-    0% { box-shadow: 0 0 0 0 rgba(var(--accent-color-rgb), 0.4); }
-    70% { box-shadow: 0 0 0 5px rgba(var(--accent-color-rgb), 0); }
-    100% { box-shadow: 0 0 0 0 rgba(var(--accent-color-rgb), 0); }
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-color) 16%, transparent);
 }
 
 .form-actions {
+    grid-column: 1 / -1;
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    margin-top: 20px;
+    flex-wrap: wrap;
     gap: 10px;
+    justify-content: flex-end;
+    margin-top: 4px;
 }
 
 .form-actions button {
-    flex: 1;
-    padding: 10px 12px;
-    border-radius: 6px;
-    cursor: pointer !important;
-    transition: all 0.3s ease;
-    font-weight: 500;
-    border: none;
-    font-size: 0.92rem;
-    user-select: none;
-    -webkit-appearance: button;
-    appearance: button;
-    text-align: center;
-    white-space: nowrap;
-    min-width: auto;
-    pointer-events: auto; /* Explicitly enable pointer events */
-    position: relative; /* Ensure proper stacking context */
-    z-index: 25; /* Higher than parent elements */
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+    font-weight: 700;
 }
 
-.form-actions button:active {
-    transform: scale(0.98);
-}
-
-.form-actions .save-button {
-    background-color: var(--accent-color);
+.save-button {
+    background: color-mix(in srgb, var(--accent-color) 92%, white 8%);
     color: white;
-    box-shadow: 0 2px 5px rgba(var(--accent-color-rgb), 0.3);
+    border-color: transparent;
 }
 
-.form-actions .save-button:hover {
-    background-color: var(--accent-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(var(--accent-color-rgb), 0.4);
+.cancel-button {
+    background: var(--button-bg);
+    color: var(--text-primary);
 }
 
-.form-actions .save-button:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(var(--accent-color-rgb), 0.3);
-}
-
-.form-actions .delete-button {
-    background-color: #ef4444;
+.delete-button {
+    background: color-mix(in srgb, #e54848 90%, white 10%);
     color: white;
-    border: none;
-    box-shadow: 0 2px 5px rgba(239, 68, 68, 0.3);
+    border-color: transparent;
 }
 
-.form-actions .delete-button:hover {
-    background-color: #dc2626;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.4);
+.theme-dark .timetable-header,
+[data-theme="dark"] .timetable-header {
+    background:
+        radial-gradient(circle at top right, color-mix(in srgb, var(--accent-color) 18%, transparent) 0, transparent 38%),
+        linear-gradient(135deg, color-mix(in srgb, var(--bg-secondary) 88%, #0b1220 12%) 0%, color-mix(in srgb, var(--bg-primary) 92%, var(--accent-color) 8%) 100%);
+    box-shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
 }
 
-.form-actions .delete-button:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+.theme-dark .timetable-summary-card,
+.theme-dark .period-label,
+.theme-dark .period-row,
+.theme-dark .time-slot.editing,
+[data-theme="dark"] .timetable-summary-card,
+[data-theme="dark"] .period-label,
+[data-theme="dark"] .period-row,
+[data-theme="dark"] .time-slot.editing {
+    box-shadow: 0 18px 34px rgba(0, 0, 0, 0.22);
+}
+
+.theme-dark .day-button,
+[data-theme="dark"] .day-button {
+    background: color-mix(in srgb, var(--bg-secondary) 92%, white 8%);
+}
+
+.theme-dark .time-slot-edit-form input,
+[data-theme="dark"] .time-slot-edit-form input {
+    background: color-mix(in srgb, var(--bg-primary) 85%, black 15%);
+}
+
+@media (max-width: 1100px) {
+    .timetable-overview {
+        grid-template-columns: 1fr;
+    }
+
+    .timetable-summary-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .period-section {
+        grid-template-columns: 1fr;
+    }
+
+    .period-label {
+        padding-bottom: 14px;
+    }
+}
+
+@media (max-width: 820px) {
+    .timetable-container {
+        margin-bottom: 24px;
+    }
+
+    .timetable-header {
+        padding: 20px;
+        border-radius: 22px;
+    }
+
+    .header-main {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .timetable-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .day-selector {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .day-button {
+        min-height: 58px;
+    }
+
+    .time-slot-edit-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 560px) {
+    .timetable-header {
+        padding: 18px;
+    }
+
+    .timetable-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .template-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .template-controls button,
+    .template-controls select,
+    .template-controls input,
+    .default-timetable-dropdown-container,
+    .save-template {
+        width: 100%;
+    }
+
+    .day-selector {
+        grid-template-columns: 1fr;
+    }
+
+    .time-slot-header,
+    .time-slot-edit-header,
+    .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .time-slot-actions {
+        justify-content: flex-start;
+    }
 }
