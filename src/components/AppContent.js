@@ -322,16 +322,33 @@ const AppContent = () => {
                   </div>
                   <div className="timetable-section">
                     <div className="animated-container fade-in-up">
-                      <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px'}}>
-                        <h2 className="section-title" style={{margin: 0}}>Weekly Schedule</h2>
-                        {/* Sync Status Indicator */}
-                        <div className="sync-status" title={isFirestoreReady ? "Synced to cloud" : "Local storage only"}>
-                          {isFirestoreReady ? (
-                            <span style={{color: '#4CAF50', fontSize: '12px', fontWeight: 'bold'}}>☁️ Cloud</span>
-                          ) : (
-                            <span style={{color: '#FF9800', fontSize: '12px', fontWeight: 'bold'}}>💾 Local</span>
-                          )}
+                      <div className="dashboard-overview-grid" aria-label="Schedule dashboard overview">
+                        <div className="overview-card">
+                          <span className="overview-label">Today</span>
+                          <strong className="overview-value">
+                            {new Date().toLocaleDateString(undefined, { weekday: 'long' })}
+                          </strong>
+                          <span className="overview-subtext">
+                            {new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          </span>
                         </div>
+                        <div className="overview-card">
+                          <span className="overview-label">Mode</span>
+                          <strong className="overview-value">Weekly View</strong>
+                          <span className="overview-subtext">Focused on timetable execution</span>
+                        </div>
+                        <div className="overview-card overview-status-card" title={isFirestoreReady ? "Synced to cloud" : "Local storage only"}>
+                          <span className="overview-label">Sync</span>
+                          <strong className="overview-value">
+                            {isFirestoreReady ? 'Cloud Connected' : 'Local Only'}
+                          </strong>
+                          <span className={`sync-status-chip ${isFirestoreReady ? 'is-cloud' : 'is-local'}`}>
+                            {isFirestoreReady ? '☁ Cloud' : '💾 Local'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="dashboard-title-row">
+                        <h2 className="section-title">Weekly Schedule</h2>
                       </div>
                       <Timetable />
                     </div>
