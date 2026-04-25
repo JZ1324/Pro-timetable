@@ -1119,3 +1119,170 @@ html {
         font-size: 1rem;
     }
 }
+
+/* Motion polish */
+.reveal {
+    opacity: 0;
+    transform: translateY(12px);
+    transition:
+        opacity 420ms cubic-bezier(0.22, 1, 0.36, 1),
+        transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+    will-change: opacity, transform;
+}
+
+.reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.app-view-shell {
+    width: 100%;
+    animation: appViewEnter 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.view-planner,
+.view-search {
+    transform-origin: top center;
+}
+
+.overview-card.reveal {
+    animation: none;
+}
+
+.overview-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-2);
+    transition:
+        transform 180ms ease,
+        box-shadow 180ms ease,
+        border-color 180ms ease;
+}
+
+.dashboard-title-row.reveal {
+    transition-delay: 120ms;
+}
+
+@keyframes appViewEnter {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.99);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Timetable visual refresh */
+.timetable-section {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background:
+        linear-gradient(135deg, rgba(20, 184, 166, 0.08), transparent 28%),
+        linear-gradient(225deg, rgba(56, 189, 248, 0.08), transparent 28%),
+        linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-elevated));
+    border-color: rgba(125, 211, 252, 0.18);
+}
+
+.timetable-section::before,
+.timetable-section::after {
+    content: '';
+    position: absolute;
+    top: 92px;
+    bottom: 18px;
+    width: clamp(64px, 8vw, 110px);
+    border-radius: 18px;
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            rgba(20, 184, 166, 0.0) 0,
+            rgba(20, 184, 166, 0.0) 18px,
+            rgba(20, 184, 166, 0.34) 18px,
+            rgba(20, 184, 166, 0.34) 20px,
+            rgba(56, 189, 248, 0.22) 20px,
+            rgba(56, 189, 248, 0.22) 38px,
+            rgba(249, 115, 22, 0.28) 38px,
+            rgba(249, 115, 22, 0.28) 42px,
+            rgba(20, 184, 166, 0.0) 42px,
+            rgba(20, 184, 166, 0.0) 72px
+        );
+    background-size: 100% 144px;
+    opacity: 0.42;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(0.2px) saturate(1.12);
+    animation: timetableSectionSideFlow 8s linear infinite;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 86%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 86%, transparent);
+}
+
+.timetable-section::before {
+    left: 20px;
+}
+
+.timetable-section::after {
+    right: 20px;
+    animation-direction: reverse;
+}
+
+.timetable-section > .animated-container {
+    position: relative;
+    z-index: 1;
+}
+
+body.scrolling-motion-active .timetable-section::before,
+body.scrolling-motion-active .timetable-section::after {
+    opacity: 0.88;
+    animation-duration: 1.05s;
+    filter: blur(0) saturate(1.35);
+}
+
+[data-theme="dark"] .overview-card,
+body.theme-dark .overview-card {
+    background:
+        linear-gradient(145deg, rgba(18, 28, 37, 0.96), rgba(24, 38, 49, 0.94)),
+        linear-gradient(90deg, rgba(20, 184, 166, 0.14), rgba(56, 189, 248, 0.1));
+    border-color: rgba(125, 211, 252, 0.22);
+    box-shadow:
+        0 16px 34px rgba(0, 0, 0, 0.24),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .overview-card:nth-child(2),
+body.theme-dark .overview-card:nth-child(2) {
+    background:
+        linear-gradient(145deg, rgba(18, 28, 37, 0.96), rgba(24, 38, 49, 0.94)),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.14), rgba(147, 51, 234, 0.1));
+}
+
+[data-theme="dark"] .overview-status-card,
+body.theme-dark .overview-status-card {
+    background:
+        linear-gradient(145deg, rgba(18, 28, 37, 0.96), rgba(24, 38, 49, 0.94)),
+        linear-gradient(90deg, rgba(34, 197, 94, 0.14), rgba(20, 184, 166, 0.12));
+}
+
+[data-theme="dark"] .overview-label,
+body.theme-dark .overview-label {
+    color: #8fd5dc;
+}
+
+[data-theme="dark"] .overview-subtext,
+body.theme-dark .overview-subtext {
+    color: #aec0cf;
+}
+
+[data-theme="dark"] .sync-status-chip.is-cloud,
+body.theme-dark .sync-status-chip.is-cloud {
+    color: #d8fff1;
+    background: rgba(20, 184, 166, 0.24);
+    border: 1px solid rgba(94, 234, 212, 0.24);
+}
+
+@keyframes timetableSectionSideFlow {
+    from { background-position-y: 0; }
+    to { background-position-y: 144px; }
+}

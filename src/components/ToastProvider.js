@@ -12,15 +12,25 @@ export const ToastProvider = ({ children }) => {
     setToasts((current) => current.filter((toast) => toast.id !== id));
   }, []);
 
+  const dismissToast = useCallback((id) => {
+    setToasts((current) => current.map((toast) => (
+      toast.id === id ? { ...toast, exiting: true } : toast
+    )));
+
+    setTimeout(() => {
+      removeToast(id);
+    }, 180);
+  }, [removeToast]);
+
   const addToast = useCallback((message, type = 'info', duration = DEFAULT_DURATION) => {
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const toast = { id, message, type };
     setToasts((current) => [...current, toast]);
 
     setTimeout(() => {
-      removeToast(id);
+      dismissToast(id);
     }, duration);
-  }, [removeToast]);
+  }, [dismissToast]);
 
   const value = useMemo(() => ({
     addToast,
@@ -34,9 +44,9 @@ export const ToastProvider = ({ children }) => {
       {children}
       <div className="toast-stack" aria-live="polite" aria-atomic="true">
         {toasts.map((toast) => (
-          <div key={toast.id} className={`toast toast-${toast.type}`} role="status">
+          <div key={toast.id} className={`toast toast-${toast.type} ${toast.exiting ? 'toast-exit' : ''}`} role="status">
             <span>{toast.message}</span>
-            <button type="button" className="toast-close" onClick={() => removeToast(toast.id)} aria-label="Close notification">×</button>
+            <button type="button" className="toast-close" onClick={() => dismissToast(toast.id)} aria-label="Close notification">×</button>
           </div>
         ))}
       </div>

@@ -18,7 +18,12 @@
   padding: 12px 14px;
   color: #fff;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-  animation: toastIn 220ms ease-out;
+  animation: toastIn 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: bottom right;
+}
+
+.toast-exit {
+  animation: toastOut 180ms ease-in forwards;
 }
 
 .toast-info {
@@ -44,12 +49,23 @@
 
 @keyframes toastIn {
   from {
-    transform: translateY(8px);
+    transform: translateY(10px) scale(0.98);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes toastOut {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(8px) scale(0.98);
+    opacity: 0;
   }
 }
 

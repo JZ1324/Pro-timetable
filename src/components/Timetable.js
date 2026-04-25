@@ -24,6 +24,7 @@ import { useAuth } from './AuthProvider';
 import { isAdmin } from '../services/userService';
 import AdminTerminal from './AdminTerminal';
 import AdminDashboard from './AdminDashboard';
+import { useToast } from './ToastProvider';
 import { isNotificationSupported, requestNotificationPermission, checkUpcomingClasses } from '../services/notificationService';
 import { debugLog } from '../utils/debug';
 import '../styles/components/Timetable.css';
@@ -39,6 +40,7 @@ import '../styles/components/PracticeReminderPopup.css';
 
 const Timetable = () => {
     const { user } = useAuth();
+    const toast = useToast();
     
     // Use shared sync status hook
     const { isFirestoreReady, firestoreService, timetableManager } = useSyncStatus();
@@ -329,6 +331,7 @@ const Timetable = () => {
                     setTemplates(timetableService.getTemplateNames());
                     setCurrentTemplate(finalTemplateName);
                     saveCurrentTemplate(finalTemplateName);
+                    toast.success(successMessage || `Template "${finalTemplateName}" saved.`);
                     
                     // Close the popup without showing any alert
                     setTemplatePopup(prev => ({ ...prev, isOpen: false }));
@@ -336,6 +339,7 @@ const Timetable = () => {
                     return true;
                 } catch (error) {
                     console.error('Error saving timetable as template:', error);
+                    toast.error(fallbackMessage || 'Template could not be saved.');
                     
                     // Close the popup without showing any alert
                     setTemplatePopup(prev => ({ ...prev, isOpen: false }));
@@ -673,6 +677,7 @@ const Timetable = () => {
         
         // Animate time slots when template loads
         setTimeout(() => animateTimeSlots(), 100);
+        toast.info(`Loaded "${templateName}" template.`);
         
         // Load practice reminders for this template
         const storageKey = `practice-reminders-${templateName}`;
@@ -693,12 +698,7 @@ const Timetable = () => {
     const deleteTemplate = (templateName) => {
         // Don't delete built-in templates
         if (templateName === 'school') {
-            setNotification({
-                isOpen: true,
-                message: 'The default school template cannot be deleted.',
-                type: 'warning',
-                title: 'Cannot Delete Template'
-            });
+            toast.info('The default school template cannot be deleted.');
             return;
         }
         
@@ -722,13 +722,7 @@ const Timetable = () => {
                         loadTemplate('school');
                     }
                     
-                    // Show success notification
-                    setNotification({
-                        isOpen: true,
-                        message: `Template "${templateName}" has been deleted.`,
-                        type: 'success',
-                        title: 'Template Deleted'
-                    });
+                    toast.success(`Template "${templateName}" deleted.`);
                 }
             }
         });
@@ -804,6 +798,7 @@ const Timetable = () => {
             if (newReminders[reminderKey]) {
                 // Remove reminder
                 delete newReminders[reminderKey];
+                toast.info(`Practice reminder removed for ${slot.subject || `Period ${period}`}.`);
             } else {
                 // Add reminder
                 newReminders[reminderKey] = {
@@ -818,6 +813,7 @@ const Timetable = () => {
                     lastShown: null,
                     template: currentTemplate // Associate reminder with current template
                 };
+                toast.success(`Practice reminder added for ${slot.subject || `Period ${period}`}.`);
             }
             
             // Save to localStorage with template-specific key
@@ -1200,6 +1196,7 @@ const Timetable = () => {
             const updatedSlots = [...timeSlots];
             updatedSlots[index] = finalUpdatedSlot;
             setTimeSlots(updatedSlots);
+            toast.success('Class updated.');
             
             console.log('Updated slots array:', updatedSlots);
         }
@@ -1248,6 +1245,7 @@ const Timetable = () => {
         const conflictingSlot = getConflictingSlot(finalUpdatedSlot, id);
         if (conflictingSlot) {
             const conflictLabel = conflictingSlot.subject || `Period ${conflictingSlot.period}`;
+            toast.error('Schedule conflict. Adjust the class time range.');
             setNotification({
                 isOpen: true,
                 title: 'Schedule Conflict',
@@ -1270,6 +1268,7 @@ const Timetable = () => {
             const updatedSlots = [...timeSlots];
             updatedSlots.splice(index, 1);
             setTimeSlots(updatedSlots);
+            toast.info('Class removed.');
         }
         
         // If the removed slot was being edited, close the editing form
@@ -1440,6 +1439,7 @@ const Timetable = () => {
         const newSlot = createEmptySlotForPeriod(currentDay, period);
         timetableService.addTimeSlot(newSlot);
         setTimeSlots([...timeSlots, newSlot]);
+        toast.info(`Added an empty slot for Period ${period}.`);
     };
     
     // Auto-save to Firestore when timeSlots change (debounced)

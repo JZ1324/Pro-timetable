@@ -1049,7 +1049,6 @@
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
 }
-
 /* Final width and spacing overrides */
 .current-day-display {
     margin: 0 0 14px;
@@ -2237,4 +2236,631 @@
 .form-actions .delete-button:active {
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+/* Applied last: motion rules that override legacy duplicated blocks above. */
+.day-selector {
+    position: relative;
+    isolation: isolate;
+    padding-bottom: 10px;
+}
+
+.day-active-indicator {
+    position: absolute;
+    left: 0;
+    bottom: 1px;
+    height: 3px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent-color), var(--accent-hover));
+    box-shadow: 0 6px 16px rgba(var(--accent-color-rgb), 0.26);
+    transition:
+        transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+        width 260ms cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 160ms ease;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.day-button {
+    z-index: 1;
+}
+
+.day-button.active {
+    animation: none;
+}
+
+.day-button.active::after {
+    display: none;
+}
+
+.time-slot {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    transition:
+        transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 180ms ease,
+        filter 180ms ease,
+        opacity 180ms ease;
+    will-change: transform;
+}
+
+.time-slot:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow:
+        0 10px 22px rgba(0, 0, 0, 0.18),
+        0 0 0 1px rgba(255, 255, 255, 0.16);
+    filter: saturate(1.06);
+}
+
+.time-slot:active {
+    transform: translateY(-1px) scale(0.99);
+}
+
+.time-slot > * {
+    position: relative;
+    z-index: 2;
+}
+
+.time-slot-actions {
+    transition:
+        opacity 160ms ease,
+        transform 160ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .time-slot-actions {
+        opacity: 0;
+        transform: translateY(-2px);
+    }
+
+    .time-slot:hover .time-slot-actions,
+    .time-slot:focus-within .time-slot-actions,
+    .time-slot.editing .time-slot-actions {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.time-slot-actions button {
+    transition:
+        background-color 160ms ease,
+        border-color 160ms ease,
+        transform 160ms ease,
+        opacity 160ms ease;
+}
+
+.time-slot-actions button:hover {
+    transform: translateY(-1px);
+    background-color: rgba(255, 255, 255, 0.18);
+}
+
+.time-slot.editing.has-conflict {
+    animation: conflictShake 220ms ease, highlight-edit 1.5s ease forwards;
+    border-color: #d92d20;
+    box-shadow:
+        0 0 0 3px rgba(217, 45, 32, 0.13),
+        0 8px 22px rgba(217, 45, 32, 0.16);
+}
+
+.schedule-conflict-message {
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(217, 45, 32, 0.08);
+    border: 1px solid rgba(217, 45, 32, 0.2);
+}
+
+.timetable-container {
+    position: relative;
+    isolation: isolate;
+}
+
+.timetable-container > * {
+    position: relative;
+    z-index: 2;
+}
+
+.timetable-container > .scroll-cinema-frame {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+.timetable-container::before,
+.timetable-container::after {
+    content: '';
+    position: absolute;
+    top: 28px;
+    bottom: 28px;
+    width: 2px;
+    border-radius: 999px;
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            rgba(var(--accent-color-rgb), 0) 0,
+            rgba(var(--accent-color-rgb), 0) 10px,
+            rgba(var(--accent-color-rgb), 0.66) 10px,
+            rgba(var(--accent-color-rgb), 0.66) 30px,
+            rgba(255, 255, 255, 0.6) 30px,
+            rgba(255, 255, 255, 0.6) 34px,
+            rgba(var(--accent-color-rgb), 0) 34px,
+            rgba(var(--accent-color-rgb), 0) 54px
+        );
+    background-size: 100% 108px;
+    opacity: 0.42;
+    pointer-events: none;
+    z-index: 1;
+    animation: timetableRailFlow 7.4s linear infinite;
+    filter: drop-shadow(0 0 8px rgba(var(--accent-color-rgb), 0.28));
+}
+
+.timetable-container::before {
+    left: -28px;
+}
+
+.timetable-container::after {
+    right: -28px;
+    animation-direction: reverse;
+}
+
+.scroll-cinema-frame {
+    border-radius: inherit;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.scroll-cinema-strip {
+    position: absolute;
+    top: 26px;
+    bottom: 26px;
+    width: clamp(52px, 5.6vw, 78px);
+    overflow: hidden;
+    opacity: 0.76;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
+}
+
+.scroll-cinema-strip-left {
+    left: clamp(-90px, -6.5vw, -58px);
+}
+
+.scroll-cinema-strip-right {
+    right: clamp(-90px, -6.5vw, -58px);
+}
+
+.scroll-cinema-strip::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: var(--scroll-cinema-scan, 50%);
+    height: 86px;
+    transform: translateY(-50%);
+    border-top: 1px solid rgba(var(--accent-color-rgb), 0.26);
+    border-bottom: 1px solid rgba(var(--accent-color-rgb), 0.26);
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(var(--accent-color-rgb), 0),
+            rgba(var(--accent-color-rgb), 0.2),
+            rgba(255, 255, 255, 0.18),
+            rgba(var(--accent-color-rgb), 0)
+        );
+    opacity: 0.58;
+    z-index: 3;
+    transition:
+        top 220ms cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 180ms ease,
+        height 180ms ease;
+}
+
+.scroll-cinema-strip::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    transform: translateX(-50%);
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            rgba(var(--accent-color-rgb), 0.22) 0,
+            rgba(var(--accent-color-rgb), 0.22) 18px,
+            transparent 18px,
+            transparent 32px
+        );
+    opacity: 0.55;
+}
+
+.scroll-cinema-track {
+    display: grid;
+    grid-auto-rows: clamp(48px, 6.2vh, 64px);
+    gap: 10px;
+    width: 100%;
+    transform: translate3d(0, calc(var(--scroll-cinema-shift, -70px) + var(--scroll-cinema-nudge, 0px)), 0);
+    transition:
+        transform 460ms cubic-bezier(0.22, 1, 0.36, 1),
+        filter 180ms ease;
+    will-change: transform;
+}
+
+.scroll-cinema-strip-right .scroll-cinema-track {
+    transform: translate3d(0, calc(var(--scroll-cinema-shift-reverse, 70px) + var(--scroll-cinema-nudge-reverse, 0px)), 0);
+}
+
+.scroll-cinema-card {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid rgba(var(--accent-color-rgb), 0.2);
+    background:
+        linear-gradient(
+            145deg,
+            rgba(var(--accent-color-rgb), 0.16),
+            rgba(255, 255, 255, 0.46) 52%,
+            rgba(var(--accent-color-rgb), 0.08)
+        ),
+        linear-gradient(
+            120deg,
+            transparent 0%,
+            transparent 34%,
+            rgba(255, 255, 255, 0.34) 45%,
+            transparent 58%,
+            transparent 100%
+        );
+    background-size: auto, 220% 100%;
+    background-position: center, -120% 0;
+    box-shadow:
+        0 10px 22px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.38);
+    opacity: 0.76;
+    animation: cinemaCardSheen 5.8s ease-in-out infinite;
+    animation-delay: var(--frame-delay, 0ms);
+}
+
+.scroll-cinema-card::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 11px;
+    width: var(--frame-line, 56%);
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(var(--accent-color-rgb), 0.34);
+    box-shadow: 20px 0 0 rgba(255, 255, 255, 0.32);
+}
+
+.scroll-cinema-card::after {
+    content: '';
+    position: absolute;
+    left: 10px;
+    right: 12px;
+    bottom: 12px;
+    height: 2px;
+    border-radius: 999px;
+    background: rgba(var(--accent-color-rgb), 0.3);
+    box-shadow:
+        0 -8px 0 rgba(255, 255, 255, 0.24),
+        18px -8px 0 rgba(var(--accent-color-rgb), 0.22);
+}
+
+.scroll-cinema-strip-left .scroll-cinema-card:nth-child(even) {
+    transform: translateX(7px);
+}
+
+.scroll-cinema-strip-right .scroll-cinema-card:nth-child(even) {
+    transform: translateX(-7px);
+}
+
+body.scrolling-motion-active .timetable-container::before,
+body.scrolling-motion-active .timetable-container::after {
+    opacity: 0.82;
+    animation-duration: 1.15s;
+    filter: drop-shadow(0 0 12px rgba(var(--accent-color-rgb), 0.52));
+}
+
+body.scrolling-motion-active .scroll-cinema-strip {
+    opacity: 0.96;
+}
+
+body.scrolling-motion-active .scroll-cinema-strip::before {
+    height: 112px;
+    opacity: 0.88;
+}
+
+body.scrolling-motion-active .scroll-cinema-track {
+    transition-duration: 150ms;
+    filter: saturate(1.22) brightness(1.04);
+}
+
+body.scrolling-motion-active .scroll-cinema-card {
+    opacity: 0.94;
+    border-color: rgba(var(--accent-color-rgb), 0.34);
+}
+
+@keyframes timetableRailFlow {
+    from { background-position-y: 0; }
+    to { background-position-y: 108px; }
+}
+
+@keyframes cinemaCardSheen {
+    0%, 36% { background-position: center, -120% 0; }
+    70%, 100% { background-position: center, 140% 0; }
+}
+
+@keyframes conflictShake {
+    0%, 100% { transform: translateX(0); }
+    35% { transform: translateX(-3px); }
+    70% { transform: translateX(3px); }
+}
+
+@media (max-width: 1080px) {
+    .scroll-cinema-strip {
+        width: 46px;
+        opacity: 0.46;
+    }
+
+    .scroll-cinema-strip-left {
+        left: -48px;
+    }
+
+    .scroll-cinema-strip-right {
+        right: -48px;
+    }
+}
+
+@media (max-width: 900px) {
+    .scroll-cinema-frame,
+    .timetable-container::before,
+    .timetable-container::after {
+        display: none;
+    }
+}
+
+/* Visible color and scroll-motion pass */
+[data-theme="dark"] .timetable-container,
+body.theme-dark .timetable-container {
+    background:
+        linear-gradient(145deg, rgba(12, 19, 27, 0.96), rgba(14, 24, 33, 0.96)),
+        linear-gradient(90deg, rgba(20, 184, 166, 0.1), rgba(56, 189, 248, 0.08));
+    border-color: rgba(125, 211, 252, 0.2);
+    box-shadow:
+        0 24px 70px rgba(0, 0, 0, 0.38),
+        0 0 0 1px rgba(255, 255, 255, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .timetable-header,
+body.theme-dark .timetable-header {
+    padding: 20px;
+    border-radius: 18px;
+    background:
+        linear-gradient(145deg, rgba(24, 38, 49, 0.92), rgba(18, 28, 37, 0.92)),
+        linear-gradient(90deg, rgba(20, 184, 166, 0.16), rgba(56, 189, 248, 0.08));
+    border: 1px solid rgba(125, 211, 252, 0.18);
+    box-shadow:
+        0 18px 40px rgba(0, 0, 0, 0.24),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .timetable-header h2,
+body.theme-dark .timetable-header h2 {
+    color: #f8fafc;
+}
+
+[data-theme="dark"] .current-day-display span,
+body.theme-dark .current-day-display span {
+    color: #7dd3fc;
+    background: rgba(8, 15, 23, 0.56);
+    border: 1px solid rgba(125, 211, 252, 0.18);
+    box-shadow: 0 10px 28px rgba(56, 189, 248, 0.08);
+}
+
+[data-theme="dark"] .template-controls,
+body.theme-dark .template-controls {
+    align-items: center;
+}
+
+[data-theme="dark"] .default-timetable-btn,
+[data-theme="dark"] .template-controls button,
+[data-theme="dark"] .import-button,
+body.theme-dark .default-timetable-btn,
+body.theme-dark .template-controls button,
+body.theme-dark .import-button {
+    color: #eaf7fb;
+    border: 1px solid rgba(125, 211, 252, 0.2);
+    background:
+        linear-gradient(145deg, rgba(25, 39, 50, 0.98), rgba(13, 22, 31, 0.98));
+    box-shadow:
+        0 10px 20px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .default-timetable-btn,
+body.theme-dark .default-timetable-btn {
+    border-color: rgba(20, 184, 166, 0.38);
+    background:
+        linear-gradient(145deg, rgba(20, 184, 166, 0.2), rgba(13, 22, 31, 0.98));
+}
+
+[data-theme="dark"] .save-template-btn,
+body.theme-dark .save-template-btn {
+    background: linear-gradient(145deg, #0d9488, #0f766e);
+    border-color: rgba(94, 234, 212, 0.34);
+}
+
+[data-theme="dark"] .edit-mode-toggle,
+body.theme-dark .edit-mode-toggle {
+    background: linear-gradient(145deg, rgba(37, 99, 235, 0.76), rgba(14, 116, 144, 0.86));
+    border-color: rgba(125, 211, 252, 0.32);
+}
+
+[data-theme="dark"] .color-legend-btn,
+body.theme-dark .color-legend-btn {
+    background: linear-gradient(145deg, rgba(124, 58, 237, 0.72), rgba(56, 189, 248, 0.34));
+    border-color: rgba(196, 181, 253, 0.28);
+}
+
+[data-theme="dark"] .import-button,
+body.theme-dark .import-button {
+    background: linear-gradient(145deg, #f97316, #dc2626);
+    border-color: rgba(251, 146, 60, 0.38);
+}
+
+[data-theme="dark"] .template-controls button:hover,
+[data-theme="dark"] .default-timetable-btn:hover,
+[data-theme="dark"] .import-button:hover,
+body.theme-dark .template-controls button:hover,
+body.theme-dark .default-timetable-btn:hover,
+body.theme-dark .import-button:hover {
+    border-color: rgba(125, 211, 252, 0.46);
+    filter: saturate(1.15) brightness(1.06);
+    box-shadow:
+        0 14px 28px rgba(20, 184, 166, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .day-button,
+body.theme-dark .day-button {
+    background: linear-gradient(145deg, rgba(20, 184, 166, 0.18), rgba(24, 38, 49, 0.94));
+    color: #d7edf3;
+    border-color: rgba(20, 184, 166, 0.22);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="dark"] .day-button:hover,
+body.theme-dark .day-button:hover {
+    color: #ffffff;
+    border-color: rgba(125, 211, 252, 0.42);
+    background: linear-gradient(145deg, rgba(20, 184, 166, 0.34), rgba(56, 189, 248, 0.18));
+}
+
+[data-theme="dark"] .day-button.active,
+body.theme-dark .day-button.active {
+    color: #ffffff;
+    background: linear-gradient(145deg, #f97316, #9333ea);
+    border-color: rgba(251, 146, 60, 0.48);
+    box-shadow:
+        0 14px 28px rgba(249, 115, 22, 0.24),
+        0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .timetable,
+body.theme-dark .timetable {
+    background:
+        linear-gradient(180deg, rgba(15, 23, 32, 0.86), rgba(10, 16, 24, 0.94));
+    border-color: rgba(125, 211, 252, 0.12);
+}
+
+[data-theme="dark"] .period-label,
+body.theme-dark .period-label {
+    background: rgba(20, 31, 41, 0.92);
+    border-color: rgba(125, 211, 252, 0.12);
+    color: #d7edf3;
+}
+
+[data-theme="dark"] .period-row,
+body.theme-dark .period-row {
+    background: rgba(11, 18, 26, 0.55);
+    border-color: rgba(125, 211, 252, 0.08);
+}
+
+[data-theme="dark"] .time-slot,
+body.theme-dark .time-slot {
+    box-shadow:
+        0 16px 34px rgba(0, 0, 0, 0.26),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.scroll-cinema-strip {
+    width: clamp(82px, 8vw, 118px);
+    opacity: 0.95;
+}
+
+.scroll-cinema-strip-left {
+    left: clamp(-132px, -10vw, -94px);
+}
+
+.scroll-cinema-strip-right {
+    right: clamp(-132px, -10vw, -94px);
+}
+
+.scroll-cinema-track {
+    grid-auto-rows: clamp(64px, 8vh, 84px);
+    gap: 14px;
+}
+
+.scroll-cinema-card {
+    border-radius: 16px;
+    border-color: rgba(125, 211, 252, 0.28);
+    background:
+        linear-gradient(145deg, rgba(20, 184, 166, 0.36), rgba(56, 189, 248, 0.2) 50%, rgba(249, 115, 22, 0.22)),
+        linear-gradient(120deg, transparent 0%, transparent 30%, rgba(255, 255, 255, 0.48) 46%, transparent 64%);
+    background-size: auto, 220% 100%;
+    box-shadow:
+        0 14px 32px rgba(0, 0, 0, 0.2),
+        0 0 22px rgba(20, 184, 166, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    opacity: 0.92;
+}
+
+.scroll-cinema-strip::before {
+    height: 126px;
+    border-color: rgba(125, 211, 252, 0.36);
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(20, 184, 166, 0),
+            rgba(20, 184, 166, 0.34),
+            rgba(56, 189, 248, 0.24),
+            rgba(249, 115, 22, 0.18),
+            rgba(20, 184, 166, 0)
+        );
+    opacity: 0.9;
+}
+
+.scroll-cinema-strip::after {
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            rgba(125, 211, 252, 0.34) 0,
+            rgba(125, 211, 252, 0.34) 24px,
+            transparent 24px,
+            transparent 38px
+        );
+    opacity: 0.9;
+}
+
+.timetable-container::before,
+.timetable-container::after {
+    width: 4px;
+    opacity: 0.86;
+    filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.34));
+}
+
+@media (max-width: 1080px) {
+    .scroll-cinema-strip {
+        width: 60px;
+    }
+
+    .scroll-cinema-strip-left {
+        left: -66px;
+    }
+
+    .scroll-cinema-strip-right {
+        right: -66px;
+    }
+}
+
+/* Removed the generated CSS reel from behind the timetable. */
+.scroll-cinema-frame,
+.scroll-cinema-strip,
+.timetable-container::before,
+.timetable-container::after {
+    display: none !important;
+}
+
+.timetable-container::before,
+.timetable-container::after {
+    content: none !important;
 }

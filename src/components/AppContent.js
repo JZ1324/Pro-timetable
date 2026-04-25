@@ -7,6 +7,7 @@ import AcademicPlanner from './AcademicPlanner';
 import SmartStudySearch from './SmartStudySearch';
 import Login from './Login';
 import ThemeInitializer from './ThemeInitializer';
+import RevealOnScroll from './RevealOnScroll';
 import { applyThemeToDocument } from '../services/themeService';
 import { useAuth } from './AuthProvider';
 import { useSyncStatus } from '../hooks/useSyncStatus';
@@ -93,6 +94,13 @@ const clearStaleScrollLock = () => {
   root.style.minHeight = 'unset';
   STALE_SCROLL_LOCK_CLASSES.forEach((className) => body.classList.remove(className));
 };
+
+const normalizeWheelDelta = (event) => {
+  const modeMultiplier = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
+  return event.deltaY * modeMultiplier;
+};
+
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 const AppContent = () => {
   // Get saved theme or default to light
@@ -276,7 +284,139 @@ const AppContent = () => {
     };
   }, [isAuthenticated, showAcademicPlanner, showSmartStudySearch]);
 
+  useEffect(() => {
+    let pendingScroll = 0;
+    let animationFrame = 0;
+    let scrollActiveTimer = 0;
+
+    const flushScroll = () => {
+      const scrollStep = Math.max(-72, Math.min(72, pendingScroll));
+      pendingScroll = 0;
+      animationFrame = 0;
+
+      if (scrollStep !== 0) {
+        window.scrollBy({ top: scrollStep, left: 0, behavior: 'auto' });
+      }
+    };
+
+    const markScrollActive = (direction) => {
+      const scrollDirection = direction < 0 ? -1 : 1;
+
+      document.body.classList.add('scrolling-motion-active');
+      document.documentElement.style.setProperty('--scroll-motion-direction', scrollDirection.toString());
+      document.documentElement.style.setProperty('--scroll-cinema-nudge', `${scrollDirection * -18}px`);
+      document.documentElement.style.setProperty('--scroll-cinema-nudge-reverse', `${scrollDirection * 18}px`);
+      window.clearTimeout(scrollActiveTimer);
+      scrollActiveTimer = window.setTimeout(() => {
+        document.body.classList.remove('scrolling-motion-active');
+        document.documentElement.style.setProperty('--scroll-cinema-nudge', '0px');
+        document.documentElement.style.setProperty('--scroll-cinema-nudge-reverse', '0px');
+      }, 420);
+    };
+
+    const handleWheel = (event) => {
+      if (
+        event.defaultPrevented ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        Math.abs(event.deltaX) > Math.abs(event.deltaY) ||
+        hasVisibleBlockingOverlay()
+      ) {
+        return;
+      }
+
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target?.closest('.main-content')) {
+        return;
+      }
+
+      if (target.closest('input, textarea, select, [contenteditable="true"], .import-timetable-content, .settings-panel, .smart-study-search, .help-page-fullscreen, .admin-dashboard, .admin-terminal')) {
+        return;
+      }
+
+      const rawDelta = normalizeWheelDelta(event);
+      if (Math.abs(rawDelta) < 1) {
+        return;
+      }
+
+      event.preventDefault();
+      const direction = Math.sign(rawDelta);
+      markScrollActive(direction);
+      pendingScroll += direction * Math.min(Math.abs(rawDelta) * 0.42, 80);
+
+      if (!animationFrame) {
+        animationFrame = window.requestAnimationFrame(flushScroll);
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.clearTimeout(scrollActiveTimer);
+      if (animationFrame) {
+        window.cancelAnimationFrame(animationFrame);
+      }
+      document.body.classList.remove('scrolling-motion-active');
+      document.documentElement.style.setProperty('--scroll-cinema-nudge', '0px');
+      document.documentElement.style.setProperty('--scroll-cinema-nudge-reverse', '0px');
+    };
+  }, []);
+
+  useEffect(() => {
+    let animationFrame = 0;
+    let readyTimer = 0;
+
+    const updateScrollProgress = () => {
+      animationFrame = 0;
+
+      const root = document.documentElement;
+      const scrollablePage = Math.max(1, root.scrollHeight - window.innerHeight);
+      const pageProgress = clamp(window.scrollY / scrollablePage, 0, 1);
+      const timetableSection = document.querySelector('.timetable-section');
+      let timetableProgress = pageProgress;
+
+      if (timetableSection) {
+        const rect = timetableSection.getBoundingClientRect();
+        const scrollRange = Math.max(1, window.innerHeight + rect.height);
+        timetableProgress = clamp((window.innerHeight - rect.top) / scrollRange, 0, 1);
+      }
+
+      const railShift = Math.round((timetableProgress - 0.5) * 260);
+
+      root.style.setProperty('--page-scroll-progress', pageProgress.toFixed(4));
+      root.style.setProperty('--timetable-scroll-progress', timetableProgress.toFixed(4));
+      root.style.setProperty('--scroll-cinema-shift', `${railShift}px`);
+      root.style.setProperty('--scroll-cinema-shift-reverse', `${-railShift}px`);
+      root.style.setProperty('--scroll-cinema-scan', `${Math.round(timetableProgress * 100)}%`);
+    };
+
+    const scheduleUpdate = () => {
+      if (!animationFrame) {
+        animationFrame = window.requestAnimationFrame(updateScrollProgress);
+      }
+    };
+
+    updateScrollProgress();
+    readyTimer = window.setTimeout(updateScrollProgress, 250);
+
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate);
+
+    return () => {
+      window.clearTimeout(readyTimer);
+      window.removeEventListener('scroll', scheduleUpdate);
+      window.removeEventListener('resize', scheduleUpdate);
+      if (animationFrame) {
+        window.cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [isAuthenticated, showAcademicPlanner, showSmartStudySearch]);
+
   // Conditionally render Login or main app
+  const activeView = showAcademicPlanner ? 'planner' : showSmartStudySearch ? 'search' : 'timetable';
+
   return (
     <div className={`app theme-${currentTheme}`} data-theme={currentTheme}>
       <ThemeInitializer theme={currentTheme} />
@@ -300,19 +440,19 @@ const AppContent = () => {
                 user={user}
               />
             )}
-            <main className="main-content">
+            <main className={`main-content app-view-${activeView}`}>
               {showAcademicPlanner ? (
-                <div className="planner-full-width">
+                <div key="planner-view" className="app-view-shell view-planner planner-full-width">
                   <div className="animated-container fade-in-up">
                     <AcademicPlanner />
                   </div>
                 </div>
               ) : showSmartStudySearch ? (
-                <div className="smart-study-search-full-width">
+                <div key="search-view" className="app-view-shell view-search smart-study-search-full-width">
                   <SmartStudySearch onClose={toggleSmartStudySearch} />
                 </div>
               ) : (
-                <div className={`main-container ${!sidebarOpen ? 'sidebar-collapsed' : ''}`}>
+                <div key="timetable-view" className={`app-view-shell view-timetable main-container ${!sidebarOpen ? 'sidebar-collapsed' : ''}`}>
                   <div className={`sidebar ${!sidebarOpen ? 'collapsed' : ''}`}>
                     <ThemeSwitcher 
                       onThemeChange={handleThemeChange} 
@@ -323,7 +463,7 @@ const AppContent = () => {
                   <div className="timetable-section">
                     <div className="animated-container fade-in-up">
                       <div className="dashboard-overview-grid" aria-label="Schedule dashboard overview">
-                        <div className="overview-card">
+                        <RevealOnScroll className="overview-card" style={{ '--reveal-delay': '0ms' }}>
                           <span className="overview-label">Today</span>
                           <strong className="overview-value">
                             {new Date().toLocaleDateString(undefined, { weekday: 'long' })}
@@ -331,13 +471,13 @@ const AppContent = () => {
                           <span className="overview-subtext">
                             {new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                           </span>
-                        </div>
-                        <div className="overview-card">
+                        </RevealOnScroll>
+                        <RevealOnScroll className="overview-card" style={{ '--reveal-delay': '80ms' }}>
                           <span className="overview-label">Mode</span>
                           <strong className="overview-value">Weekly View</strong>
                           <span className="overview-subtext">Focused on timetable execution</span>
-                        </div>
-                        <div className="overview-card overview-status-card" title={isFirestoreReady ? "Synced to cloud" : "Local storage only"}>
+                        </RevealOnScroll>
+                        <RevealOnScroll className="overview-card overview-status-card" style={{ '--reveal-delay': '140ms' }} title={isFirestoreReady ? "Synced to cloud" : "Local storage only"}>
                           <span className="overview-label">Sync</span>
                           <strong className="overview-value">
                             {isFirestoreReady ? 'Cloud Connected' : 'Local Only'}
@@ -345,11 +485,11 @@ const AppContent = () => {
                           <span className={`sync-status-chip ${isFirestoreReady ? 'is-cloud' : 'is-local'}`}>
                             {isFirestoreReady ? '☁ Cloud' : '💾 Local'}
                           </span>
-                        </div>
+                        </RevealOnScroll>
                       </div>
-                      <div className="dashboard-title-row">
+                      <RevealOnScroll className="dashboard-title-row" rootMargin="0px 0px -8% 0px">
                         <h2 className="section-title">Weekly Schedule</h2>
-                      </div>
+                      </RevealOnScroll>
                       <Timetable />
                     </div>
                   </div>

@@ -154,3 +154,90 @@
 .time-slot.current-period:hover .code {
     opacity: 1;
 }
+
+/* Quiet current-period motion layer */
+.time-slot.current-period {
+    width: 100%;
+    margin-right: 0;
+    transform: translateY(-1px);
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    box-shadow:
+        0 10px 24px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(255, 214, 90, 0.34);
+    animation: currentPeriodBreathe 4.2s ease-in-out infinite;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 214, 90, 0.10));
+}
+
+.time-slot.current-period:hover {
+    transform: translateY(-4px) scale(1.01);
+    border: 1px solid rgba(255, 255, 255, 0.82);
+    box-shadow:
+        0 14px 28px rgba(0, 0, 0, 0.22),
+        0 0 0 1px rgba(255, 214, 90, 0.42);
+    animation-play-state: running;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 214, 90, 0.12));
+}
+
+.time-slot.current-period::before,
+.time-slot.current-period:hover::before {
+    content: '' !important;
+    position: absolute;
+    inset: -3px;
+    width: auto;
+    height: auto;
+    border-radius: 10px;
+    background: transparent;
+    border: 1px solid rgba(255, 214, 90, 0.55);
+    box-shadow: 0 0 0 0 rgba(255, 214, 90, 0.28);
+    opacity: 1;
+    z-index: 1;
+    pointer-events: none;
+    animation: currentPeriodRing 3.8s ease-in-out infinite;
+}
+
+.time-slot.current-period::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 214, 90, 0.10));
+    opacity: 1;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.time-slot.current-period:hover .subject-title,
+.time-slot.current-period:hover .room,
+.time-slot.current-period:hover .teacher,
+.time-slot.current-period:hover .code,
+.time-slot.current-period:hover .time {
+    opacity: 1;
+}
+
+@keyframes currentPeriodBreathe {
+    0%, 100% {
+        filter: saturate(1);
+        box-shadow:
+            0 10px 24px rgba(0, 0, 0, 0.2),
+            0 0 0 1px rgba(255, 214, 90, 0.28);
+    }
+
+    50% {
+        filter: saturate(1.08);
+        box-shadow:
+            0 12px 28px rgba(0, 0, 0, 0.22),
+            0 0 0 1px rgba(255, 214, 90, 0.5);
+    }
+}
+
+@keyframes currentPeriodRing {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+
+    50% {
+        transform: scale(1.015);
+        opacity: 1;
+    }
+}

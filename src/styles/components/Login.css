@@ -614,3 +614,77 @@
   visibility: visible !important;
   z-index: 10;
 }
+
+/* Login page layout correction */
+.app > .login-container,
+.login-container {
+  width: 100vw;
+  max-width: 100vw;
+  min-height: 100dvh;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding: clamp(24px, 5vh, 48px) 20px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(0, 119, 255, 0.08), transparent 34%),
+    radial-gradient(circle at 82% 78%, rgba(46, 125, 50, 0.07), transparent 30%),
+    #f5f8fa;
+}
+
+.login-form {
+  width: min(100%, 420px);
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.password-input-group {
+  position: relative;
+  display: block;
+}
+
+.password-input-group input {
+  width: 100%;
+  padding-right: 52px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  transform: translateY(-50%);
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #555;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.password-toggle:hover {
+  background: rgba(0, 119, 255, 0.08);
+  color: #0077ff;
+}
+
+.password-toggle:disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .app > .login-container,
+  .login-container {
+    padding: 18px;
+  }
+
+  .login-form {
+    width: 100%;
+    margin: 0;
+  }
+}

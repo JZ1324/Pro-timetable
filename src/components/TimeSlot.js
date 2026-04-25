@@ -3,6 +3,36 @@ import useRevealOnScroll from '../hooks/useRevealOnScroll';
 import colorService from '../services/colorService';
 import { debugLog } from '../utils/debug';
 
+const scrollElementIntoViewSlowly = (element) => {
+    if (!element) return;
+
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const rect = element.getBoundingClientRect();
+    const targetY = Math.max(0, window.scrollY + rect.top - ((window.innerHeight - rect.height) / 2));
+
+    if (prefersReduced) {
+        window.scrollTo(0, targetY);
+        return;
+    }
+
+    const startY = window.scrollY;
+    const distance = targetY - startY;
+    const duration = Math.min(760, Math.max(460, Math.abs(distance) * 0.45));
+    const startTime = performance.now();
+
+    const step = (time) => {
+        const progress = Math.min(1, (time - startTime) / duration);
+        const eased = 1 - ((1 - progress) ** 3);
+        window.scrollTo(0, startY + (distance * eased));
+
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        }
+    };
+
+    window.requestAnimationFrame(step);
+};
+
 const TimeSlot = ({ 
     slot, 
     onUpdate, 
@@ -32,10 +62,7 @@ const TimeSlot = ({
         if (isEditing && timeSlotRef.current) {
             // Small delay to ensure the expanded form is rendered before scrolling
             setTimeout(() => {
-                timeSlotRef.current.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
+                scrollElementIntoViewSlowly(timeSlotRef.current);
             }, 50);
         }
     }, [isEditing]);
@@ -120,23 +147,23 @@ const TimeSlot = ({
             'Lunch': '#fb8c00'                    // Orange
         };
         
-        // Darker variants for dark mode (for better contrast)
+        // Brighter dark-mode tones keep subject cards distinct on the richer dark UI.
         const darkSubjectColors = {
-            'Mathematics - Advanced': '#2c5b9e',  // Darker blue
-            'Specialist Mathematics': '#3f4d8c',  // Darker indigo
-            'Physics': '#2d6e30',                 // Darker green
-            'Chemistry': '#00796b',               // Darker teal
-            'Biology Units 1 & 2': '#3d703f',     // Darker light green
-            'English': '#aa2c57',                 // Darker pink
-            'Literature': '#ad1457',              // Darker deep pink
-            'Psychology': '#6a1b7a',              // Darker purple
-            'War Boom and Bust': '#c8502b',       // Darker orange
-            'Active and Able': '#c19412',         // Darker amber
-            'Tutorial': '#757575',                // Darker grey
-            'Private Study': '#673ab7',           // Darker deep purple
-            'PST': '#673ab7',                     // Darker deep purple (same as Private Study)
-            'Recess': '#5d4037',                  // Darker brown
-            'Lunch': '#e65100'                    // Darker orange
+            'Mathematics - Advanced': '#2563eb',
+            'Specialist Mathematics': '#6366f1',
+            'Physics': '#16a34a',
+            'Chemistry': '#0d9488',
+            'Biology Units 1 & 2': '#65a30d',
+            'English': '#db2777',
+            'Literature': '#ec4899',
+            'Psychology': '#9333ea',
+            'War Boom and Bust': '#ea580c',
+            'Active and Able': '#ca8a04',
+            'Tutorial': '#64748b',
+            'Private Study': '#7c3aed',
+            'PST': '#7c3aed',
+            'Recess': '#a16207',
+            'Lunch': '#f59e0b'
         };
         
         // Enhanced hash function to generate a color based on subject name
@@ -375,7 +402,7 @@ const TimeSlot = ({
 
     // Edit mode
     return (
-        <div className="time-slot editing" ref={timeSlotRef}>
+        <div className={`time-slot editing ${hasConflict ? 'has-conflict' : ''}`} ref={timeSlotRef}>
             <div className="time-slot-edit-header">
                 <h4>Edit Class</h4>
                 <span className="edit-period-label">Period {slot.period} • {slot.startTime} - {slot.endTime}</span>
@@ -449,7 +476,7 @@ const TimeSlot = ({
                     />
                 </div>
                 {hasConflict && (
-                    <div className="form-group" style={{ marginTop: '-2px' }}>
+                    <div className="form-group schedule-conflict-message" style={{ marginTop: '-2px' }}>
                         <p style={{ color: '#b42318', fontWeight: 600, margin: 0 }}>
                             Time conflict with {conflictingSlot.subject || `Period ${conflictingSlot.period}`} ({conflictingSlot.startTime} - {conflictingSlot.endTime})
                         </p>
